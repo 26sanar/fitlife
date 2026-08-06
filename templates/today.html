@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Today's Workout - FitLife</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Today's Workout</h1>
+
+        <p>Hi <strong>{{ user_name }}</strong>, here is your workout for today.</p>
+
+        <div class="streak">
+            <span class="streak-number">{{ streak }}</span>
+            <span class="streak-label">day streak</span>
+        </div>
+
+        <div class="workout-card">
+            <h2>{{ workout_name }}</h2>
+            <ul>
+                <li>Duration: {{ workout.minutes }} minutes</li>
+                <li>Level: {{ workout.level }}</li>
+                <li>Focus: {{ workout.focus }}</li>
+            </ul>
+        </div>
+
+        <form action="/complete" method="POST">
+            <input type="hidden" name="user_name" value="{{ user_name }}">
+            <input type="hidden" name="workout_name" value="{{ workout_name }}">
+            <input type="hidden" name="minutes" value="{{ workout.minutes }}">
+            <button type="submit">Mark as Complete</button>
+        </form>
+
+        <a href="/">Get a Different Workout</a>
+    </div>
+</body>
+</html>
