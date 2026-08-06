@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Workout History - FitLife</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Workout History</h1>
+
+        <div class="streak">
+            <span class="streak-number">{{ streak }}</span>
+            <span class="streak-label">day streak</span>
+        </div>
+
+        <p>Total time exercised: <strong>{{ total_minutes }} minutes</strong></p>
+
+        {% if sessions %}
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Workout</th>
+                    <th>Minutes</th>
+                    <th>Date Completed</th>
+                </tr>
+                {% for session in sessions %}
+                <tr>
+                    <td>{{ session[0] }}</td>
+                    <td>{{ session[1] }}</td>
+                    <td>{{ session[2] }}</td>
+                    <td>{{ session[3] }}</td>
+                    <td>{{ session[4] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No workouts have been completed yet.</p>
+        {% endif %}
+
+        <a href="/">Back to Home</a>
+    </div>
+</body>
+</html>
