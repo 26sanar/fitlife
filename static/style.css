@@ -1,0 +1,128 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0d0d0f;
+    color: #ffffff;
+}
+
+.container {
+    width: 600px;
+    margin: 40px auto;
+    background-color: #17171b;
+    padding: 30px;
+    border-radius: 16px;
+}
+
+h1 {
+    color: #ffffff;
+    margin-bottom: 5px;
+}
+
+h2 {
+    color: #c6ff2e;
+    margin-top: 0;
+}
+
+p {
+    color: #b0b0b8;
+    line-height: 1.5;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-top: 15px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+input, select, button {
+    padding: 12px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #2e2e36;
+    background-color: #202028;
+    color: #ffffff;
+    font-size: 15px;
+}
+
+button {
+    margin-top: 25px;
+    background-color: #ff7a00;
+    color: #0d0d0f;
+    border: none;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #ff9433;
+}
+
+a {
+    display: inline-block;
+    margin-top: 20px;
+    color: #c6ff2e;
+}
+
+.streak {
+    text-align: center;
+    border: 6px solid #c6ff2e;
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    margin: 25px auto;
+    padding-top: 30px;
+    box-sizing: border-box;
+}
+
+.streak-number {
+    display: block;
+    font-size: 48px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.streak-label {
+    display: block;
+    color: #b0b0b8;
+    font-size: 14px;
+}
+
+.workout-card {
+    background-color: #202028;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.workout-card ul {
+    list-style: none;
+    padding-left: 0;
+    color: #b0b0b8;
+}
+
+.workout-card li {
+    padding: 6px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th {
+    background-color: #ff7a00;
+    color: #0d0d0f;
+}
+
+th, td {
+    border: 1px solid #2e2e36;
+    padding: 10px;
+    text-align: left;
+    color: #ffffff;
+}
