@@ -2,39 +2,41 @@
 <html>
 <head>
     <title>FitLife - Home Workout Web App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
     <div class="container">
         <div class="screen-label">001 — Welcome</div>
-        <h1>FitLife</h1>
+        <h1>Ten minutes a day. That's it.</h1>
 
-        <p>Ten minutes a day. That's it. No equipment, no gym.</p>
-
-        <p>Fill in the form below to get a workout that matches your fitness level and the time you have available.</p>
+        <p>No equipment, no gym. Workouts that fit around your life.</p>
 
         <form action="/today" method="POST">
-            <label>Your Name:</label>
+            <label>Your Name</label>
             <input type="text" name="user_name" required>
 
-            <label>Age:</label>
+            <label>Age</label>
             <input type="number" name="age" min="13" max="100" required>
 
-            <label>Fitness Level:</label>
+            <label>Fitness Level</label>
             <select name="level" required>
                 <option value="Beginner">Beginner</option>
                 <option value="Intermediate">Intermediate</option>
                 <option value="Advanced">Advanced</option>
             </select>
-           <label>Your Goal:</label>
+
+            <label>Your Goal</label>
             <select name="goal" required>
                 <option value="General fitness">General fitness</option>
                 <option value="Build strength">Build strength</option>
                 <option value="Stay active">Stay active</option>
             </select>
 
-            <label>Minutes Available:</label>
+            <label>Minutes Available</label>
             <input type="number" name="available_minutes" min="5" max="60" required>
 
             <button type="submit">Get My Workout</button>

@@ -2,11 +2,15 @@
 <html>
 <head>
     <title>Today's Workout - FitLife</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
     <div class="container">
+        <div class="screen-label">003 — Today</div>
         <h1>Today's Workout</h1>
 
         <p>Hi <strong>{{ user_name }}</strong>, here is your workout for today.</p>
@@ -19,15 +23,16 @@
         <div class="workout-card">
             <h2>{{ workout_name }}</h2>
             <ul>
-                <li>Duration: {{ workout.minutes }} minutes</li>
-                <li>Level: {{ workout.level }}</li>
-                <li>Focus: {{ workout.focus }}</li>
+                <li><span>Duration</span> <span>{{ workout.minutes }} min</span></li>
+                <li><span>Level</span> <span>{{ workout.level }}</span></li>
+                <li><span>Focus</span> <span>{{ workout.focus }}</span></li>
+                <li><span>Goal</span> <span>{{ goal }}</span></li>
             </ul>
 
             <h3>Your Exercises</h3>
 
             {% if exercises %}
-            <div class="exercise-grid">  
+                <div class="exercise-grid">
                 {% for exercise in exercises %}
                 <div class="exercise">
                     <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}">
@@ -53,6 +58,7 @@
         </form>
 
         <a href="/">Get a Different Workout</a>
+
         <p class="attribution">Exercise data and demonstrations provided by ExerciseDB.</p>
     </div>
 </body>
