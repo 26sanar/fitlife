@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reminders - FitLife</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="brand">
+            <span class="mark"></span>
+            <span class="brand-name">FitLife</span>
+        </div>
+
+        <div class="screen-label">006 — Reminders</div>
+        <h1>Reminders</h1>
+
+        {% if not user_name %}
+
+        <p class="lead">Enter your name to set up a daily workout reminder.</p>
+
+        <form action="/reminders" method="GET">
+            <label for="reminders-name">Your name</label>
+            <input type="text" name="user" id="reminders-name"
+                   placeholder="Your name" maxlength="40" required>
+            <button type="submit">Set My Reminder</button>
+        </form>
+
+        {% else %}
+
+        <p class="lead">A daily nudge for <strong>{{ user_name }}</strong> so the streak never breaks.</p>
+
+        <form action="/reminders/save" method="POST">
+            <input type="hidden" name="user_name" value="{{ user_name }}">
+
+            <label for="reminder-time">Remind me at</label>
+            <input type="time" name="reminder_time" id="reminder-time"
+                   value="{{ reminder.reminder_time if reminder else '07:00' }}" required>
+
+            <label for="reminder-enabled">Reminder switched on</label>
+            <input type="checkbox" name="enabled" id="reminder-enabled" value="1"
+                   {% if reminder and reminder.enabled == 1 %}checked{% endif %}>
+
+            <button type="submit">Save Reminder</button>
+        </form>
+
+        <h3>Browser Permission</h3>
+        <p class="microcopy" id="permission-state"></p>
+        <button type="button" id="permission-btn">Allow Notifications</button>
+
+        <p class="microcopy">Reminders only fire while a FitLife tab is open in your browser.</p>
+
+        <a class="ghost-button" href="{{ url_for('plan', user=user_name) }}">View My Plan</a>
+
+        <script>
+        (function () {
+            var enabled = {{ 'true' if reminder and reminder.enabled == 1 else 'false' }};
+            var reminderTime = "{{ reminder.reminder_time if reminder else '' }}";
+            var firedKey = "fitlife-reminder-fired-" + {{ user_name|tojson }};
+
+            var permissionBtn = document.getElementById("permission-btn");
+            var permissionState = document.getElementById("permission-state");
+
+            function describePermission() {
+                if (!("Notification" in window)) {
+                    permissionState.textContent = "This browser does not support notifications.";
+                    permissionBtn.disabled = true;
+                    return;
+                }
+                if (Notification.permission === "granted") {
+                    permissionState.textContent = "Notifications are allowed.";
+                } else if (Notification.permission === "denied") {
+                    permissionState.textContent = "Notifications are blocked. Allow them in your browser settings to use reminders.";
+                } else {
+                    permissionState.textContent = "Notifications have not been allowed yet. Press the button below.";
+                }
+            }
+
+            permissionBtn.addEventListener("click", function () {
+                if (!("Notification" in window)) return;
+                Notification.requestPermission().then(describePermission);
+            });
+
+            describePermission();
+
+            function twoDigits(number) {
+                if (number < 10) return "0" + number;
+                return "" + number;
+            }
+
+            function checkReminder() {
+                if (!enabled || reminderTime === "") return;
+                if (!("Notification" in window)) return;
+                if (Notification.permission !== "granted") return;
+
+                var now = new Date();
+                var currentTime = twoDigits(now.getHours()) + ":" + twoDigits(now.getMinutes());
+                var today = now.toDateString();
+
+                if (currentTime >= reminderTime && localStorage.getItem(firedKey) !== today) {
+                    try {
+                        new Notification("FitLife", { body: "Time for your workout" });
+                    } catch (error) {
+                        return;
+                    }
+                    localStorage.setItem(firedKey, today);
+                }
+            }
+
+            checkReminder();
+            setInterval(checkReminder, 60000);
+        })();
+        </script>
+
+        {% endif %}
+
+        <a class="ghost-button" href="/">Back to Home</a>
+    </div>
+</body>
+</html>

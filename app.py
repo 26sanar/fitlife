@@ -138,6 +138,15 @@ def create_database():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_name TEXT NOT NULL UNIQUE,
+            reminder_time TEXT NOT NULL,
+            enabled INTEGER NOT NULL
+        )
+    """)
+
     connection.commit()
     connection.close()
 
@@ -313,6 +322,43 @@ def load_profile(user_name):
     return profile
 
 
+def save_reminder(user_name, reminder_time, enabled):
+    """Create a reminder for this user, or update it if one already exists."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+    cursor.execute("""
+        INSERT INTO reminders (user_name, reminder_time, enabled)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_name) DO UPDATE SET
+            reminder_time = excluded.reminder_time,
+            enabled = excluded.enabled
+    """, (user_name, reminder_time, enabled))
+    connection.commit()
+    connection.close()
+
+
+def load_reminder(user_name):
+    """Find a saved reminder by name and return it as a dictionary, or None."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT reminder_time, enabled
+        FROM reminders
+        WHERE user_name = ?
+    """, (user_name,))
+    row = cursor.fetchone()
+    connection.close()
+
+    if row is None:
+        return None
+
+    reminder = {
+        "reminder_time": row[0],
+        "enabled": row[1]
+    }
+    return reminder
+
+
 @app.route("/")
 def index():
     return render_template("index.html", profile=None, message=None)
@@ -432,6 +478,34 @@ def history():
         total_minutes=total_minutes,
         weeks=get_weekly_minutes(user_name)
     )
+
+
+@app.route("/reminders")
+def reminders():
+    user_name = request.args.get("user", "").strip()
+
+    if user_name == "":
+        return render_template("reminders.html", user_name=None, reminder=None)
+
+    return render_template(
+        "reminders.html",
+        user_name=user_name,
+        reminder=load_reminder(user_name)
+    )
+
+
+@app.route("/reminders/save", methods=["POST"])
+def reminders_save():
+    user_name = request.form["user_name"]
+    reminder_time = request.form["reminder_time"]
+
+    if "enabled" in request.form:
+        enabled = 1
+    else:
+        enabled = 0
+
+    save_reminder(user_name, reminder_time, enabled)
+    return redirect(url_for("reminders", user=user_name))
 
 
 create_database()
