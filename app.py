@@ -27,14 +27,35 @@ focus_map = {
     "Chest":     ["chest"]
 }
 
+# Exercises tagged as bodyweight that still require a bar, bench or other apparatus
+needs_apparatus = [
+    "pull-up", "pull up", "chin-up", "chin up", "dip", "muscle up",
+    "bar ", "bench", "parallel", "rings", "hang", "suspended", "assisted"
+]
+
 exercise_library = []
+
+
+def is_equipment_free(exercise):
+    """Return True only if an exercise needs no equipment at all."""
+    # Must be tagged bodyweight and nothing else
+    if exercise["equipments"] != ["body weight"]:
+        return False
+
+    # Reject exercises whose name implies a bar, bench or similar
+    name = exercise["name"].lower()
+    for word in needs_apparatus:
+        if word in name:
+            return False
+
+    return True
 
 
 def load_exercises():
     """Fetch bodyweight exercises from the ExerciseDB API when the app starts."""
     cursor_value = None
 
-    for page in range(6):
+    for page in range(8):
         settings = {"limit": 25}
         if cursor_value is not None:
             settings["cursor"] = cursor_value
@@ -47,7 +68,7 @@ def load_exercises():
             return
 
         for exercise in data["data"]:
-            if "body weight" in exercise["equipments"]:
+            if is_equipment_free(exercise):
                 exercise_library.append({
                     "name": exercise["name"],
                     "body_parts": exercise["bodyParts"],
@@ -59,7 +80,7 @@ def load_exercises():
         if cursor_value is None:
             break
 
-    print("Loaded", len(exercise_library), "bodyweight exercises from the API")
+    print("Loaded", len(exercise_library), "equipment-free exercises from the API")
 
 
 def get_exercises_for(focus, how_many):
@@ -81,8 +102,10 @@ def get_exercises_for(focus, how_many):
 
 
 def create_database():
+    """Create both database tables if they do not already exist."""
     connection = sqlite3.connect(DATABASE)
     cursor = connection.cursor()
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,6 +115,19 @@ def create_database():
             date_completed TEXT NOT NULL
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_name TEXT NOT NULL UNIQUE,
+            age INTEGER NOT NULL,
+            level TEXT NOT NULL,
+            goal TEXT NOT NULL,
+            available_minutes INTEGER NOT NULL,
+            date_updated TEXT NOT NULL
+        )
+    """)
+
     connection.commit()
     connection.close()
 
@@ -126,6 +162,24 @@ def calculate_streak():
     return streak
 
 
+def save_profile(user_name, age, level, goal, available_minutes):
+    """Create a new profile, or update it if this name already exists."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+    cursor.execute("""
+        INSERT INTO user_profiles (user_name, age, level, goal, available_minutes, date_updated)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_name) DO UPDATE SET
+            age = excluded.age,
+            level = excluded.level,
+            goal = excluded.goal,
+            available_minutes = excluded.available_minutes,
+            date_updated = excluded.date_updated
+    """, (user_name, age, level, goal, available_minutes, str(date.today())))
+    connection.commit()
+    connection.close()
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -136,7 +190,10 @@ def today():
     user_name = request.form["user_name"]
     age = int(request.form["age"])
     level = request.form["level"]
+    goal = request.form["goal"]
     available_minutes = int(request.form["available_minutes"])
+
+    save_profile(user_name, age, level, goal, available_minutes)
 
     workout_name = choose_workout(level, available_minutes)
     workout = workouts[workout_name]
@@ -146,6 +203,7 @@ def today():
         "today.html",
         user_name=user_name,
         age=age,
+        goal=goal,
         workout_name=workout_name,
         workout=workout,
         exercises=exercises,
@@ -189,6 +247,7 @@ def history():
         streak=calculate_streak(),
         total_minutes=total_minutes
     )
+
 
 create_database()
 load_exercises()
