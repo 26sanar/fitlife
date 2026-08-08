@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import requests
 import random
@@ -142,11 +142,14 @@ def choose_workout(level, available_minutes):
     return best_match
 
 
-def calculate_streak():
-    """Count how many days in a row a workout was completed, ending today."""
+def calculate_streak(user_name):
+    """Count how many days in a row this user completed a workout, ending today."""
     connection = sqlite3.connect(DATABASE)
     cursor = connection.cursor()
-    cursor.execute("SELECT DISTINCT date_completed FROM sessions")
+    cursor.execute("""
+        SELECT DISTINCT date_completed FROM sessions
+        WHERE user_name = ?
+    """, (user_name,))
     dates = []
     for row in cursor.fetchall():
         dates.append(row[0])
@@ -160,11 +163,14 @@ def calculate_streak():
     return streak
 
 
-def get_weekly_minutes():
-    """Return the minutes exercised in each of the last 8 weeks, oldest first."""
+def get_weekly_minutes(user_name):
+    """Return the minutes this user exercised in each of the last 8 weeks, oldest first."""
     connection = sqlite3.connect(DATABASE)
     cursor = connection.cursor()
-    cursor.execute("SELECT date_completed, minutes FROM sessions")
+    cursor.execute("""
+        SELECT date_completed, minutes FROM sessions
+        WHERE user_name = ?
+    """, (user_name,))
     rows = cursor.fetchall()
     connection.close()
 
@@ -214,9 +220,46 @@ def save_profile(user_name, age, level, goal, available_minutes):
     connection.close()
 
 
+def load_profile(user_name):
+    """Find a saved profile by name and return it as a dictionary, or None."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT user_name, age, level, goal, available_minutes
+        FROM user_profiles
+        WHERE user_name = ?
+    """, (user_name,))
+    row = cursor.fetchone()
+    connection.close()
+
+    if row is None:
+        return None
+
+    profile = {
+        "user_name": row[0],
+        "age": row[1],
+        "level": row[2],
+        "goal": row[3],
+        "available_minutes": row[4]
+    }
+    return profile
+
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", profile=None, message=None)
+
+
+@app.route("/profile", methods=["POST"])
+def show_profile():
+    user_name = request.form["user_name"]
+    profile = load_profile(user_name)
+
+    if profile is None:
+        message = "No profile was found for " + user_name + "."
+        return render_template("index.html", profile=None, message=message)
+
+    return render_template("index.html", profile=profile, message=None)
 
 
 @app.route("/today", methods=["POST"])
@@ -241,7 +284,7 @@ def today():
         workout_name=workout_name,
         workout=workout,
         exercises=exercises,
-        streak=calculate_streak(),
+        streak=calculate_streak(user_name),
         today_date=date.today().strftime("%A %d %B")
     )
 
@@ -261,14 +304,30 @@ def complete():
     connection.commit()
     connection.close()
 
-    return redirect("/history")
+    return redirect(url_for("history", user=user_name))
 
 
 @app.route("/history")
 def history():
+    user_name = request.args.get("user", "").strip()
+
+    if user_name == "":
+        return render_template(
+            "history.html",
+            user_name=None,
+            sessions=[],
+            streak=0,
+            total_minutes=0,
+            weeks=[]
+        )
+
     connection = sqlite3.connect(DATABASE)
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM sessions ORDER BY id DESC")
+    cursor.execute("""
+        SELECT * FROM sessions
+        WHERE user_name = ?
+        ORDER BY id DESC
+    """, (user_name,))
     sessions = cursor.fetchall()
     connection.close()
 
@@ -278,10 +337,11 @@ def history():
 
     return render_template(
         "history.html",
+        user_name=user_name,
         sessions=sessions,
-        streak=calculate_streak(),
+        streak=calculate_streak(user_name),
         total_minutes=total_minutes,
-        weeks=get_weekly_minutes()
+        weeks=get_weekly_minutes(user_name)
     )
 
 

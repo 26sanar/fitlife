@@ -20,6 +20,21 @@
         <div class="screen-label">007 — History</div>
         <h1>Workout History</h1>
 
+        {% if not user_name %}
+
+        <p class="lead">Enter your name to see your own workouts and streak.</p>
+
+        <form action="/history" method="GET">
+            <label for="history-name">Your name</label>
+            <input type="text" name="user" id="history-name"
+                   placeholder="Your name" maxlength="40" required>
+            <button type="submit">View My History</button>
+        </form>
+
+        {% else %}
+
+        <p class="lead">Here is everything <strong>{{ user_name }}</strong> has completed.</p>
+
         <div class="history-split">
             <div>
                 <div class="streak-big">{{ streak }}</div>
@@ -59,7 +74,7 @@
                         <li class="session">
                             <div>
                                 <span class="session-name">{{ session[2] }}</span>
-                                <span class="session-sub">{{ session[1] }} &middot; {{ session[4] }}</span>
+                                <span class="session-sub">{{ session[4] }}</span>
                             </div>
                             <span class="session-minutes">{{ session[3] }} min</span>
                         </li>
@@ -72,6 +87,8 @@
                 {% endif %}
             </div>
         </div>
+
+        {% endif %}
 
         <a class="ghost-button" href="/">Back to Home</a>
     </div>

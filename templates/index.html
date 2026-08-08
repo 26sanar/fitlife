@@ -59,6 +59,19 @@
                     <button class="cta" id="get-started" type="button">Get started</button>
                     <span class="microcopy">No account required.</span>
                 </div>
+
+                <form action="/profile" method="POST">
+                    <label for="returning-name">Returning? Enter your name</label>
+                    <input type="text" name="user_name" id="returning-name"
+                           placeholder="Your name" maxlength="40" required>
+                    <button type="submit" class="ghost-button">Load my profile</button>
+                    {% if message %}
+                    <p class="microcopy">{{ message }}</p>
+                    {% endif %}
+                    {% if profile %}
+                    <p class="microcopy">Welcome back, {{ profile.user_name }}! Press Get started to see your saved answers.</p>
+                    {% endif %}
+                </form>
             </div>
         </div>
     </section>
@@ -66,9 +79,9 @@
     <!-- ============ 002 — ONBOARDING ============ -->
     <section class="onboard" id="onboard" hidden>
         <form action="/today" method="POST" id="onboard-form" novalidate>
-            <input type="hidden" name="level" id="f-level" value="">
-            <input type="hidden" name="goal" id="f-goal" value="">
-            <input type="hidden" name="available_minutes" id="f-minutes" value="">
+            <input type="hidden" name="level" id="f-level" value="{{ profile.level if profile else '' }}">
+            <input type="hidden" name="goal" id="f-goal" value="{{ profile.goal if profile else '' }}">
+            <input type="hidden" name="available_minutes" id="f-minutes" value="{{ profile.available_minutes if profile else '' }}">
 
             <header class="onboard-top">
                 <button type="button" class="back-btn" id="back-btn" aria-label="Go back">
@@ -91,6 +104,7 @@
                     <h2 class="question">First up, what should we call you?</h2>
                     <div class="field-wrap">
                         <input class="onboard-input" type="text" name="user_name" id="in-name"
+                               value="{{ profile.user_name if profile else '' }}"
                                placeholder="Your name" autocomplete="given-name" maxlength="40">
                     </div>
                 </fieldset>
@@ -100,6 +114,7 @@
                     <h2 class="question">How old are you?</h2>
                     <div class="field-wrap">
                         <input class="onboard-input" type="number" name="age" id="in-age"
+                               value="{{ profile.age if profile else '' }}"
                                placeholder="Your age" inputmode="numeric" min="13" max="100">
                     </div>
                     <p class="step-hint">FitLife is designed for ages 13 to 100.</p>
@@ -109,7 +124,7 @@
                     <div class="screen-label">002 — Onboarding</div>
                     <h2 class="question">How would you describe your fitness level?</h2>
                     <div class="options" role="radiogroup" aria-label="Fitness level" data-target="f-level">
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Beginner">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.level == 'Beginner' else 'false' }}" data-value="Beginner">
                             <span class="option-text">
                                 <span class="option-title">Beginner</span>
                                 <span class="option-sub">New to regular exercise</span>
@@ -118,7 +133,7 @@
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
                         </button>
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Intermediate">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.level == 'Intermediate' else 'false' }}" data-value="Intermediate">
                             <span class="option-text">
                                 <span class="option-title">Intermediate</span>
                                 <span class="option-sub">Active a few times a week</span>
@@ -127,7 +142,7 @@
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
                         </button>
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Advanced">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.level == 'Advanced' else 'false' }}" data-value="Advanced">
                             <span class="option-text">
                                 <span class="option-title">Advanced</span>
                                 <span class="option-sub">Training is part of my routine</span>
@@ -143,7 +158,7 @@
                     <div class="screen-label">002 — Onboarding</div>
                     <h2 class="question">What are you training for?</h2>
                     <div class="options" role="radiogroup" aria-label="Your goal" data-target="f-goal">
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="General fitness">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.goal == 'General fitness' else 'false' }}" data-value="General fitness">
                             <span class="option-text">
                                 <span class="option-title">General fitness</span>
                                 <span class="option-sub">Feel healthier day to day</span>
@@ -152,7 +167,7 @@
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
                         </button>
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Build strength">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.goal == 'Build strength' else 'false' }}" data-value="Build strength">
                             <span class="option-text">
                                 <span class="option-title">Build strength</span>
                                 <span class="option-sub">Get stronger with bodyweight work</span>
@@ -161,7 +176,7 @@
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
                         </button>
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Stay active">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.goal == 'Stay active' else 'false' }}" data-value="Stay active">
                             <span class="option-text">
                                 <span class="option-title">Stay active</span>
                                 <span class="option-sub">Keep moving, keep the streak</span>
@@ -177,19 +192,19 @@
                     <div class="screen-label">002 — Onboarding</div>
                     <h2 class="question">How much time do you have on a typical day?</h2>
                     <div class="options two-col" role="radiogroup" aria-label="Minutes available" data-target="f-minutes">
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="10">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.available_minutes == 10 else 'false' }}" data-value="10">
                             <span class="option-text"><span class="option-title">About 10 minutes</span></span>
                             <span class="option-check" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
                         </button>
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="15">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.available_minutes == 15 else 'false' }}" data-value="15">
                             <span class="option-text"><span class="option-title">About 15 minutes</span></span>
                             <span class="option-check" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
                         </button>
-                        <button type="button" class="option" role="radio" aria-checked="false" data-value="20">
+                        <button type="button" class="option" role="radio" aria-checked="{{ 'true' if profile and profile.available_minutes == 20 else 'false' }}" data-value="20">
                             <span class="option-text"><span class="option-title">About 20 minutes</span></span>
                             <span class="option-check" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
