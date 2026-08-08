@@ -126,6 +126,18 @@ def create_database():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS workout_plans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_name TEXT NOT NULL,
+            plan_date TEXT NOT NULL,
+            workout_name TEXT NOT NULL,
+            minutes INTEGER NOT NULL,
+            completed INTEGER NOT NULL,
+            UNIQUE(user_name, plan_date)
+        )
+    """)
+
     connection.commit()
     connection.close()
 
@@ -140,6 +152,62 @@ def choose_workout(level, available_minutes):
     if best_match is None:
         best_match = "Gentle Start"
     return best_match
+
+
+def generate_weekly_plan(user_name, level, available_minutes):
+    """Plan one workout for each of the next 7 days, rotating for variety."""
+    suitable = []
+    for name, details in workouts.items():
+        if details["level"] == level and details["minutes"] <= available_minutes:
+            suitable.append(name)
+
+    if suitable == []:
+        suitable = ["Gentle Start"]
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    for day_number in range(7):
+        plan_date = date.today() + timedelta(days=day_number)
+        workout_name = suitable[day_number % len(suitable)]
+        minutes = workouts[workout_name]["minutes"]
+
+        cursor.execute("""
+            INSERT INTO workout_plans (user_name, plan_date, workout_name, minutes, completed)
+            VALUES (?, ?, ?, ?, 0)
+            ON CONFLICT(user_name, plan_date) DO NOTHING
+        """, (user_name, str(plan_date), workout_name, minutes))
+
+    connection.commit()
+    connection.close()
+
+
+def load_weekly_plan(user_name):
+    """Return the user's next 7 planned days as a list of dictionaries."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT plan_date, workout_name, minutes, completed
+        FROM workout_plans
+        WHERE user_name = ? AND plan_date >= ?
+        ORDER BY plan_date
+        LIMIT 7
+    """, (user_name, str(date.today())))
+    rows = cursor.fetchall()
+    connection.close()
+
+    plan = []
+    for row in rows:
+        day = date.fromisoformat(row[0])
+        plan.append({
+            "plan_date": row[0],
+            "day_name": day.strftime("%A"),
+            "workout_name": row[1],
+            "minutes": row[2],
+            "completed": row[3],
+            "is_today": day == date.today()
+        })
+    return plan
 
 
 def calculate_streak(user_name):
@@ -271,6 +339,7 @@ def today():
     available_minutes = int(request.form["available_minutes"])
 
     save_profile(user_name, age, level, goal, available_minutes)
+    generate_weekly_plan(user_name, level, available_minutes)
 
     workout_name = choose_workout(level, available_minutes)
     workout = workouts[workout_name]
@@ -301,10 +370,30 @@ def complete():
         INSERT INTO sessions (user_name, workout_name, minutes, date_completed)
         VALUES (?, ?, ?, ?)
     """, (user_name, workout_name, minutes, str(date.today())))
+
+    cursor.execute("""
+        UPDATE workout_plans SET completed = 1
+        WHERE user_name = ? AND plan_date = ?
+    """, (user_name, str(date.today())))
+
     connection.commit()
     connection.close()
 
     return redirect(url_for("history", user=user_name))
+
+
+@app.route("/plan")
+def plan():
+    user_name = request.args.get("user", "").strip()
+
+    if user_name == "":
+        return render_template("plan.html", user_name=None, plan=[])
+
+    return render_template(
+        "plan.html",
+        user_name=user_name,
+        plan=load_weekly_plan(user_name)
+    )
 
 
 @app.route("/history")

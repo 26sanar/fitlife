@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Weekly Plan - FitLife</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="brand">
+            <span class="mark"></span>
+            <span class="brand-name">FitLife</span>
+        </div>
+
+        <div class="screen-label">004 — Plan</div>
+        <h1>Weekly Plan</h1>
+
+        {% if not user_name %}
+
+        <p class="lead">Enter your name to see your week of workouts.</p>
+
+        <form action="/plan" method="GET">
+            <label for="plan-name">Your name</label>
+            <input type="text" name="user" id="plan-name"
+                   placeholder="Your name" maxlength="40" required>
+            <button type="submit">View My Plan</button>
+        </form>
+
+        {% else %}
+
+        <p class="lead">Here is the week ahead for <strong>{{ user_name }}</strong>.</p>
+
+        {% if plan %}
+            <ul class="session-list">
+                {% for day in plan %}
+                <li class="session">
+                    <div>
+                        <span class="session-name">
+                            {{ day.day_name }}
+                            {% if day.is_today %}<span class="chip chip-goal">Today</span>{% endif %}
+                        </span>
+                        <span class="session-sub">{{ day.workout_name }} &middot; {{ day.minutes }} min</span>
+                    </div>
+                    {% if day.completed == 1 %}
+                    <span class="chip chip-goal">Done</span>
+                    {% else %}
+                    <span class="session-minutes">Not yet</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-note">
+                <p>No plan has been generated yet. Get today's workout first and your week will be planned automatically.</p>
+            </div>
+        {% endif %}
+
+        <a class="ghost-button" href="{{ url_for('history', user=user_name) }}">View My History</a>
+
+        {% endif %}
+
+        <a class="ghost-button" href="/">Back to Home</a>
+    </div>
+</body>
+</html>
