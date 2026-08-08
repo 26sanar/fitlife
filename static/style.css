@@ -9,10 +9,18 @@
     --orange:    #ff7a00;
     --magenta:   #ff2d78;
     --text:      #f5f5f7;
-    --muted:     #7d7d8a;
+    --muted:     #8f8f9d; /* lightened so small grey text passes WCAG AA on the dark background */
     --font-display: "Space Grotesk", system-ui, sans-serif;
     --font-body:    "Inter", system-ui, sans-serif;
     --ease:      cubic-bezier(0.16, 1, 0.3, 1);
+    /* spacing scale — every new gap and padding uses one of these steps */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
 }
 
 * { box-sizing: border-box; }
@@ -481,14 +489,16 @@ a:hover { opacity: 0.7; }
 }
 
 
-.exercise ol {
+.exercise ol,
+.player-instructions {
     list-style: none;
     counter-reset: step;
     padding: 0;
     margin: 0;
 }
 
-.exercise ol li {
+.exercise ol li,
+.player-instructions li {
     counter-increment: step;
     position: relative;
     padding: 0 0 0 34px;
@@ -498,9 +508,11 @@ a:hover { opacity: 0.7; }
     font-size: 13.5px;
 }
 
-.exercise ol li:last-child { margin-bottom: 0; }
+.exercise ol li:last-child,
+.player-instructions li:last-child { margin-bottom: 0; }
 
-.exercise ol li::before {
+.exercise ol li::before,
+.player-instructions li::before {
     content: counter(step);
     position: absolute;
     left: 0;
@@ -737,17 +749,22 @@ a:hover { opacity: 0.7; }
     overflow: hidden;
 }
 
+/* The photo settles from 1.06 down to 1.02 (not 1.0) so the mouse parallax
+   can shift it up to 8px without ever showing the edge of the image.
+   The --parallax-* custom properties are set live by JavaScript and are
+   read inside the keyframes, so the two effects combine cleanly. */
 .landing-photo {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: 50% 18%;
-    animation: kenSettle 2.6s var(--ease) both;
+    transform: translate(var(--parallax-x, 0px), var(--parallax-y, 0px)) scale(1.02);
+    animation: kenSettle 1.4s var(--ease) both;
 }
 
 @keyframes kenSettle {
-    from { transform: scale(1.08); }
-    to   { transform: scale(1); }
+    from { transform: translate(var(--parallax-x, 0px), var(--parallax-y, 0px)) scale(1.06); }
+    to   { transform: translate(var(--parallax-x, 0px), var(--parallax-y, 0px)) scale(1.02); }
 }
 
 .landing-scrim {
@@ -770,6 +787,13 @@ a:hover { opacity: 0.7; }
     height: 160px;
     pointer-events: none;
     opacity: 0.9;
+    animation: waveFloat 7s ease-in-out 3.2s infinite;
+}
+
+/* after the line has drawn itself, the whole wave breathes up and down slowly */
+@keyframes waveFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
 }
 
 .landing-wave path {
@@ -781,6 +805,24 @@ a:hover { opacity: 0.7; }
     stroke-dasharray: 1400;
     stroke-dashoffset: 1400;
     animation: drawWave 2.4s var(--ease) 0.6s forwards;
+}
+
+/* The heartbeat: a second copy of the line where only a short 70-unit dash
+   is visible (the other 1330 units are gap). Sliding the dash pattern by one
+   full cycle (1400) makes the bright blip sweep endlessly along the line. */
+.landing-wave .wave-pulse {
+    stroke-dasharray: 70 1330;
+    stroke-dashoffset: 0;
+    opacity: 0;
+    filter: drop-shadow(0 0 16px rgba(198, 255, 46, 0.9));
+    animation: pulseSweep 4.5s linear 3.2s infinite;
+}
+
+@keyframes pulseSweep {
+    0%   { stroke-dashoffset: 0;     opacity: 0; }
+    10%  { opacity: 0.95; }
+    85%  { opacity: 0.95; }
+    100% { stroke-dashoffset: -1400; opacity: 0; }
 }
 
 
@@ -803,11 +845,23 @@ a:hover { opacity: 0.7; }
 }
 
 .landing-top {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 22px 24px;
     animation: fadeIn 1s ease 0.15s backwards;
+}
+
+/* a hairline that fades out at both ends anchors the header row */
+.landing-top::after {
+    content: "";
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
 }
 
 .landing-top .brand { margin-bottom: 0; }
@@ -818,28 +872,33 @@ a:hover { opacity: 0.7; }
     font-weight: 500;
     letter-spacing: 0.6px;
     color: rgba(255, 255, 255, 0.78);
-    padding: 9px 18px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: rgba(8, 8, 10, 0.35);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: border-color 0.25s ease, color 0.25s ease, opacity 0.2s ease;
+    padding: 9px 4px;
+    transition: color 0.25s ease, opacity 0.2s ease;
+}
+
+.quiet-link::after {
+    content: "\2192";
+    display: inline-block;
+    margin-left: 7px;
+    transition: transform 0.25s var(--ease);
 }
 
 .quiet-link:hover {
     opacity: 1;
     color: var(--volt);
-    border-color: rgba(198, 255, 46, 0.4);
 }
+
+.quiet-link:hover::after { transform: translateX(3px); }
 
 .landing-copy {
     padding: 0 24px 42px;
     max-width: 620px;
 }
 
+/* Entrance stagger: label 0.35s, headline lines 0.47s / 0.59s,
+   lead 0.71s, CTA row 0.83s, returning link 0.95s — 120ms apart. */
 .landing-copy .screen-label {
-    animation: fadeIn 0.9s ease 0.4s backwards;
+    animation: fadeUp 0.7s var(--ease) 0.35s backwards;
 }
 
 .headline {
@@ -850,23 +909,21 @@ a:hover { opacity: 0.7; }
 
 .mark-hero { display: none; }
 
-.hl span {
-    display: inline-block;
-    animation: wordUp 0.85s var(--ease) backwards;
+.hl-mobile { display: block; }
+
+.hl .line {
+    display: block;
+    animation: lineUp 0.9s var(--ease) backwards;
 }
 
-.hl span:nth-child(1) { animation-delay: 0.50s; }
-.hl span:nth-child(2) { animation-delay: 0.58s; }
-.hl span:nth-child(3) { animation-delay: 0.66s; }
-.hl span:nth-child(4) { animation-delay: 0.74s; }
-.hl span:nth-child(5) { animation-delay: 0.82s; }
-.hl span:nth-child(6) { animation-delay: 0.90s; }
+.hl .line:nth-child(1) { animation-delay: 0.47s; }
+.hl .line:nth-child(2) { animation-delay: 0.59s; }
 
-@keyframes wordUp {
+@keyframes lineUp {
     from {
         opacity: 0;
-        transform: translateY(28px);
-        filter: blur(8px);
+        transform: translateY(26px);
+        filter: blur(6px);
     }
     to {
         opacity: 1;
@@ -879,7 +936,7 @@ a:hover { opacity: 0.7; }
 
 .landing-lead {
     max-width: 340px;
-    animation: fadeUp 0.8s var(--ease) 1.0s backwards;
+    animation: fadeUp 0.8s var(--ease) 0.71s backwards;
 }
 
 .cta-row {
@@ -888,7 +945,7 @@ a:hover { opacity: 0.7; }
     align-items: stretch;
     gap: 12px;
     margin-top: 24px;
-    animation: fadeUp 0.8s var(--ease) 1.15s backwards;
+    animation: fadeUp 0.8s var(--ease) 0.83s backwards;
 }
 
 .cta-row .microcopy { margin: 2px 0 0; }
@@ -1278,12 +1335,669 @@ a:hover { opacity: 0.7; }
 }
 
 
+/* ============================================================
+   STAGGERED PAGE ENTRANCE
+   Add .rise to a block and a .rise-N class to delay it, so page
+   content fades and rises in one piece after another.
+   ============================================================ */
+
+.rise { animation: fadeUp 0.65s var(--ease) backwards; }
+
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.10s; }
+.rise-3 { animation-delay: 0.15s; }
+.rise-4 { animation-delay: 0.20s; }
+.rise-5 { animation-delay: 0.25s; }
+
+.brand { color: var(--text); }
+a.brand:hover { opacity: 1; }
+a.brand:hover .brand-name { color: var(--volt); }
+.brand-name { transition: color 0.25s ease; }
+
+
+/* ============================================================
+   PANEL — a soft card used to group secondary content
+   ============================================================ */
+
+.panel {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: var(--space-5);
+    margin-top: var(--space-4);
+    transition: border-color 0.3s ease;
+}
+
+.panel:hover { border-color: var(--border-lit); }
+.panel h3 { margin-top: 0; }
+
+.streak-hero {
+    text-align: center;
+    margin: var(--space-3) 0 var(--space-5);
+}
+
+.workout-card { transition: border-color 0.3s ease; }
+.workout-card:hover { border-color: var(--border-lit); }
+
+
+/* ============================================================
+   BOTTOM NAVIGATION — floating glass pill, fixed to the bottom
+   ============================================================ */
+
+body.has-nav { padding-bottom: 104px; }
+
+.bottom-nav {
+    position: fixed;
+    left: 50%;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 60;
+    display: flex;
+    gap: var(--space-1);
+    width: min(440px, calc(100% - 24px));
+    padding: var(--space-2);
+    border-radius: 999px;
+    border: 1px solid var(--border-lit);
+    background: rgba(14, 14, 18, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+    animation: navIn 0.6s var(--ease) 0.25s backwards;
+}
+
+@keyframes navIn {
+    from { opacity: 0; transform: translate(-50%, 18px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 9px var(--space-1) var(--space-2);
+    border-radius: 999px;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 0.25s ease, background 0.25s ease;
+}
+
+.nav-item svg { width: 21px; height: 21px; }
+
+.nav-item:hover { color: var(--text); opacity: 1; }
+
+.nav-item.active {
+    color: var(--volt);
+    background: rgba(198, 255, 46, 0.08);
+    box-shadow: 0 0 18px rgba(198, 255, 46, 0.10) inset;
+}
+
+
+/* ============================================================
+   EXERCISE PREVIEW LIST — compact "what's in this workout" rows
+   ============================================================ */
+
+.preview-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.preview-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: 10px var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.022);
+    animation: fadeUp 0.55s var(--ease) backwards;
+    transition: border-color 0.3s ease, transform 0.3s var(--ease), background 0.3s ease;
+}
+
+.preview-item:hover {
+    border-color: rgba(198, 255, 46, 0.35);
+    background: rgba(198, 255, 46, 0.03);
+    transform: translateY(-2px);
+}
+
+.preview-item:nth-child(1) { animation-delay: 0.20s; }
+.preview-item:nth-child(2) { animation-delay: 0.27s; }
+.preview-item:nth-child(3) { animation-delay: 0.34s; }
+.preview-item:nth-child(4) { animation-delay: 0.41s; }
+
+.preview-thumb {
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: 12px;
+    background: #fff;
+    object-fit: cover;
+}
+
+/* numbered placeholder shown when an exercise has no GIF (offline mode) */
+.preview-thumb-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--volt);
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.preview-name {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: 14.5px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.preview-secs {
+    flex: none;
+    font-size: 12.5px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.start-btn {
+    width: 100%;
+    margin-top: var(--space-5);
+}
+
+/* small quiet button that looks like a text link, for secondary actions */
+.link-button {
+    margin: var(--space-3) auto 0;
+    padding: var(--space-2) var(--space-3);
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.25s ease;
+}
+
+.link-button:hover {
+    color: var(--text);
+    transform: none;
+    box-shadow: none;
+}
+
+.quiet-complete { margin: 0; }
+
+
+/* ============================================================
+   WORKOUT PLAYER — full-screen guided exercise view
+   ============================================================ */
+
+body.player-open { overflow: hidden; }
+body.player-open .bottom-nav { display: none; }
+
+.player {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(8, 8, 10, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.player-inner {
+    min-height: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 18px 22px calc(28px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+}
+
+.player-top {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    gap: 10px;
+    align-items: center;
+}
+
+.player-progress-text {
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.player-segments {
+    display: flex;
+    gap: 6px;
+    margin-top: 9px;
+}
+
+.segment {
+    flex: 1;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.segment.current { background: var(--teal); }
+
+.segment.done {
+    background: var(--volt);
+    box-shadow: 0 0 10px rgba(198, 255, 46, 0.5);
+}
+
+.player-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.5s var(--ease);
+}
+
+.player-media {
+    margin-top: var(--space-4);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #fff;
+}
+
+.player-media img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    display: block;
+}
+
+.phase-label {
+    margin-top: var(--space-4);
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+}
+
+.player.rest-mode .phase-label { color: var(--orange); }
+
+.player-exercise-name {
+    margin: 6px 0 0;
+    text-align: center;
+    text-transform: capitalize;
+    font-size: 26px;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--text);
+}
+
+.timer-wrap {
+    position: relative;
+    width: 170px;
+    height: 170px;
+    margin: var(--space-4) auto var(--space-2);
+}
+
+.timer-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.timer-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 8;
+}
+
+/* The ring outline is 339.292 units long (2 x pi x radius 54).
+   JavaScript moves stroke-dashoffset towards 339.292 as time runs out,
+   and the 1 second linear transition makes each step glide smoothly. */
+.timer-progress {
+    fill: none;
+    stroke: url(#timerGradient);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 339.292;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 10px rgba(120, 240, 120, 0.45));
+    transition: stroke-dashoffset 1s linear;
+}
+
+.player.rest-mode .timer-progress {
+    stroke: var(--orange);
+    filter: drop-shadow(0 0 10px rgba(255, 122, 0, 0.45));
+}
+
+.timer-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timer-number {
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -2px;
+}
+
+.player-instructions { margin-top: var(--space-4); }
+
+.player-controls {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding-bottom: var(--space-2);
+}
+
+.player-controls .cta {
+    flex: 1.5;
+    margin-top: 0;
+    padding: 16px 20px;
+}
+
+.skip-btn {
+    flex: 1;
+    margin-top: 0;
+    padding: 16px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    box-shadow: none;
+}
+
+.skip-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-lit);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+.player-complete {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-7) 0;
+    animation: fadeUp 0.5s var(--ease);
+}
+
+.complete-badge {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--teal), var(--volt));
+    color: #0a0a0c;
+    box-shadow: 0 0 44px rgba(198, 255, 46, 0.4);
+    animation: checkPop 0.55s var(--ease) 0.15s backwards;
+}
+
+.complete-badge svg { width: 44px; height: 44px; }
+
+.player-complete h2 { margin-top: var(--space-5); }
+
+.player-complete form {
+    width: 100%;
+    max-width: 320px;
+}
+
+
+/* ============================================================
+   PROFILE SCREEN
+   ============================================================ */
+
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.avatar {
+    width: 54px;
+    height: 54px;
+    flex: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--teal), var(--volt));
+    color: #0a0a0c;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.profile-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+}
+
+/* checkbox restyled as an iOS-style switch — same input, same name */
+.switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+    cursor: pointer;
+}
+
+.switch-row .switch-text {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+input[type="checkbox"].switch {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 52px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid var(--border-lit);
+    background: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="checkbox"].switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--text);
+    transition: transform 0.3s var(--ease), background 0.3s ease;
+}
+
+input[type="checkbox"].switch:checked {
+    background: rgba(198, 255, 46, 0.25);
+    border-color: rgba(198, 255, 46, 0.7);
+    box-shadow: 0 0 16px rgba(198, 255, 46, 0.25);
+}
+
+input[type="checkbox"].switch:checked::after {
+    transform: translateX(22px);
+    background: var(--volt);
+}
+
+
+/* highlight for today's row in the weekly plan */
+.today-row {
+    box-shadow: 3px 0 0 var(--volt) inset;
+    background: rgba(198, 255, 46, 0.045);
+}
+
+
+@media (min-width: 900px) {
+
+    .preview-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-3);
+    }
+
+    .player-media img { max-height: 320px; }
+}
+
+
+/* ============================================================
+   LANDING EXTRAS — glow pulse, ambient drift, collapsing
+   returning form, scroll cue
+   ============================================================ */
+
+/* continuous soft glow pulse that draws the eye to Get started;
+   on hover the pulse stops so the stronger hover glow takes over */
+.cta-glow { animation: ctaPulse 2.6s ease-in-out 1.4s infinite; }
+.cta-glow:hover { animation: none; }
+
+@keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 0 22px rgba(255, 122, 0, 0.25); }
+    50%      { box-shadow: 0 0 46px rgba(255, 122, 0, 0.52); }
+}
+
+/* slow ambient gradient drifting behind the left column (desktop) */
+@media (min-width: 900px) {
+    .landing-panel::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: 18%;
+        left: -14%;
+        width: 560px;
+        height: 560px;
+        border-radius: 50%;
+        pointer-events: none;
+        background: radial-gradient(circle,
+                    rgba(46, 230, 168, 0.12) 0%,
+                    rgba(198, 255, 46, 0.05) 45%,
+                    transparent 70%);
+        animation: ambientDrift 18s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes ambientDrift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(70px, -50px) scale(1.15); }
+}
+
+/* quiet text link that reveals the returning-user form */
+.returning-toggle {
+    margin: 18px 0 0;
+    padding: 4px 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    animation: fadeUp 0.8s var(--ease) 0.95s backwards;
+    transition: color 0.25s ease;
+}
+
+.returning-toggle:hover {
+    color: var(--volt);
+    transform: none;
+    box-shadow: none;
+}
+
+/* The collapse trick: the wrapper is a one-row grid whose row is 0fr
+   (zero height). Adding .open grows the row to 1fr, and the transition
+   animates smoothly between the two. The inner div hides the overflow. */
+.returning-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.5s var(--ease);
+}
+
+.returning-wrap.open { grid-template-rows: 1fr; }
+
+.returning-inner {
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* bouncing chevron shown only when the page actually scrolls */
+.scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    z-index: 3;
+    width: 34px;
+    height: 34px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.72);
+    pointer-events: none;
+    transform: translateX(-50%);
+    animation: cueBob 2s ease-in-out infinite;
+}
+
+.scroll-cue.show { display: flex; }
+.scroll-cue svg { width: 22px; height: 22px; }
+
+@keyframes cueBob {
+    0%, 100% { transform: translate(-50%, 0); }
+    50%      { transform: translate(-50%, 8px); }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+        animation-delay: 0s !important;
         transition-duration: 0.01ms !important;
     }
 

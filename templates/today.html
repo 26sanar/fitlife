@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,21 +10,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="has-nav">
     {# Work out how far around the ring the streak should reach, using a 30 day goal #}
     {% set goal_days = 30 %}
     {% set shown_days = streak if streak < goal_days else goal_days %}
     {% set ring_offset = 540.354 - (540.354 * shown_days / goal_days) %}
 
     <div class="container">
-        <div class="brand">
+        <a class="brand rise" href="/">
             <span class="mark"></span>
             <span class="brand-name">FitLife</span>
-        </div>
+        </a>
 
-        <div class="screen-label">003 — Today</div>
-        <h1>Today's Workout</h1>
-        <p class="lead">Hi <strong>{{ user_name }}</strong>, here is your workout for {{ today_date }}.</p>
+        <div class="screen-label rise rise-1">003 &mdash; Today</div>
+        <h1 class="rise rise-1">Today's Workout</h1>
+        <p class="lead rise rise-2">Hi <strong>{{ user_name }}</strong> &middot; {{ today_date }}</p>
 
         <div class="today-split">
             <div class="ring-wrap">
@@ -45,7 +45,7 @@
                 </div>
             </div>
 
-            <div class="workout-card">
+            <div class="workout-card rise rise-3">
                 <h2>{{ workout_name }}</h2>
                 <p class="card-meta">{{ workout.minutes }} min &middot; {{ workout.level }}</p>
 
@@ -56,46 +56,338 @@
                     <span class="chip chip-goal">{{ goal }}</span>
                 </div>
 
+                {% if exercises %}
+                <button type="button" class="cta start-btn" id="start-workout">Start Workout</button>
+                {% endif %}
+
+                <form action="/complete" method="POST" class="quiet-complete">
+                    <input type="hidden" name="user_name" value="{{ user_name }}">
+                    <input type="hidden" name="workout_name" value="{{ workout_name }}">
+                    <input type="hidden" name="minutes" value="{{ workout.minutes }}">
+                    {% if exercises %}
+                    <button type="submit" class="link-button">Already done it? Mark as complete</button>
+                    {% else %}
+                    <button type="submit">Mark as Complete</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        {% if exercises %}
+        <h3 class="rise rise-4">In this workout</h3>
+        <ul class="preview-list">
+            {% for exercise in exercises %}
+            <li class="preview-item">
+                {% if exercise.gif_url %}
+                <img class="preview-thumb" src="{{ exercise.gif_url }}" alt="" loading="lazy">
+                {% else %}
+                <span class="preview-thumb preview-thumb-empty" aria-hidden="true">{{ loop.index }}</span>
+                {% endif %}
+                <span class="preview-name">{{ exercise.name }}</span>
+                <span class="preview-secs">40 sec</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <p class="microcopy rise rise-5">Press Start Workout for full instructions, one exercise at a time.</p>
+        {% else %}
+        <div class="empty-note rise rise-4">
+            <p>Exercise details are unavailable right now. Complete your workout using the focus areas above.</p>
+        </div>
+        {% endif %}
+
+        <p class="attribution">Exercise data and demonstrations provided by ExerciseDB.</p>
+    </div>
+
+    {% if exercises %}
+    <!-- Guided workout player. Hidden until Start Workout is pressed. -->
+    <div class="player" id="player" hidden>
+        <div class="player-inner">
+
+            <header class="player-top">
+                <button type="button" class="back-btn" id="exit-btn" aria-label="Exit workout">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18" stroke="currentColor"
+                              stroke-width="2.2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <div>
+                    <div class="player-progress-text" id="progress-text" aria-live="polite">
+                        Exercise 1 of {{ exercises|length }}
+                    </div>
+                    <div class="player-segments" id="segments" aria-hidden="true">
+                        {% for exercise in exercises %}<span class="segment"></span>{% endfor %}
+                    </div>
+                </div>
+                <span></span>
+            </header>
+
+            <!-- The exercise / rest view -->
+            <div class="player-stage" id="player-stage">
+                <div class="player-media" id="player-media">
+                    <img id="player-gif" src="" alt="">
+                </div>
+
+                <div class="phase-label" id="phase-label">Work</div>
+                <h2 class="player-exercise-name" id="player-name"></h2>
+
+                <div class="timer-wrap">
+                    <svg class="timer-ring" viewBox="0 0 120 120" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="timerGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#2ee6a8"></stop>
+                                <stop offset="100%" stop-color="#c6ff2e"></stop>
+                            </linearGradient>
+                        </defs>
+                        <circle class="timer-track" cx="60" cy="60" r="54"></circle>
+                        <circle class="timer-progress" id="timer-progress" cx="60" cy="60" r="54"></circle>
+                    </svg>
+                    <div class="timer-center">
+                        <span class="timer-number" id="timer-number">40</span>
+                    </div>
+                </div>
+
+                <ol class="player-instructions" id="player-instructions"></ol>
+
+                <div class="player-controls">
+                    <button type="button" class="cta" id="pause-btn">Pause</button>
+                    <button type="button" class="skip-btn" id="skip-btn">Skip</button>
+                </div>
+            </div>
+
+            <!-- The completion view, shown after the last exercise -->
+            <div class="player-complete" id="complete-screen" hidden>
+                <div class="complete-badge">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4.5 12.8 10 18.3 19.5 7" stroke="currentColor"
+                              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2>Workout complete</h2>
+                <p class="lead">Nice work, {{ user_name }}. Log it to keep your streak alive.</p>
+
                 <form action="/complete" method="POST">
                     <input type="hidden" name="user_name" value="{{ user_name }}">
                     <input type="hidden" name="workout_name" value="{{ workout_name }}">
                     <input type="hidden" name="minutes" value="{{ workout.minutes }}">
                     <button type="submit">Mark as Complete</button>
                 </form>
+
+                <button type="button" class="link-button" id="overview-btn">Back to overview</button>
             </div>
+
         </div>
-
-        <h3>Your Exercises</h3>
-
-        {% if exercises %}
-            <div class="exercise-grid">
-            {% for exercise in exercises %}
-            <div class="exercise">
-                <div class="exercise-media">
-                    <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}">
-                    <span class="exercise-count">{{ loop.index }} of {{ exercises|length }}</span>
-                </div>
-                <h4>{{ exercise.name }}</h4>
-                <ol>
-                    {% for step in exercise.instructions %}
-                    <li>{{ step }}</li>
-                    {% endfor %}
-                </ol>
-            </div>
-            {% endfor %}
-            </div>
-        {% else %}
-            <div class="empty-note">
-                <p>Exercise details are unavailable right now. Complete your workout using the focus areas above.</p>
-            </div>
-        {% endif %}
-
-        <a class="ghost-button" href="{{ url_for('plan', user=user_name) }}">View My Plan</a>
-        <a class="ghost-button" href="{{ url_for('history', user=user_name) }}">View My History</a>
-        <a class="ghost-button" href="{{ url_for('reminders', user=user_name) }}">Reminders</a>
-        <a class="ghost-button" href="/">Get a Different Workout</a>
-
-        <p class="attribution">Exercise data and demonstrations provided by ExerciseDB.</p>
     </div>
+
+    <script>
+    (function () {
+        // The exercise list arrives from Flask as JSON, so JavaScript can
+        // read the same data the template used for the preview list.
+        var exercises = {{ exercises|tojson }};
+
+        var WORK_SECONDS = 40;   // how long each exercise runs
+        var REST_SECONDS = 20;   // how long the rest between exercises lasts
+
+        // The timer circle's outline is 339.292 units long (2 x pi x radius 54).
+        // Moving stroke-dashoffset from 0 to 339.292 empties the ring.
+        var RING_LENGTH = 339.292;
+
+        var player = document.getElementById("player");
+        var stage = document.getElementById("player-stage");
+        var completeScreen = document.getElementById("complete-screen");
+        var progressText = document.getElementById("progress-text");
+        var segments = document.getElementById("segments").children;
+        var mediaBox = document.getElementById("player-media");
+        var gif = document.getElementById("player-gif");
+        var phaseLabel = document.getElementById("phase-label");
+        var nameEl = document.getElementById("player-name");
+        var timerNumber = document.getElementById("timer-number");
+        var ringProgress = document.getElementById("timer-progress");
+        var instructionsEl = document.getElementById("player-instructions");
+        var pauseBtn = document.getElementById("pause-btn");
+
+        var currentIndex = 0;    // which exercise is on screen
+        var phase = "work";      // "work" or "rest"
+        var secondsLeft = 0;
+        var phaseLength = 0;     // total seconds in the current phase
+        var paused = false;
+        var timerId = null;      // id from setInterval, needed to stop it later
+
+        function startTimer() {
+            stopTimer();
+            timerId = setInterval(tick, 1000);
+        }
+
+        function stopTimer() {
+            if (timerId !== null) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            timerNumber.textContent = secondsLeft;
+            // fraction of this phase already used, between 0 and 1
+            var used = (phaseLength - secondsLeft) / phaseLength;
+            ringProgress.style.strokeDashoffset = RING_LENGTH * used;
+        }
+
+        function updateSegments() {
+            for (var i = 0; i < segments.length; i = i + 1) {
+                // an exercise counts as done once its work phase has finished
+                var done = i < currentIndex || (i === currentIndex && phase === "rest");
+                segments[i].classList.toggle("done", done);
+                segments[i].classList.toggle("current", i === currentIndex && phase === "work");
+            }
+        }
+
+        function showExercise(index) {
+            currentIndex = index;
+            phase = "work";
+            secondsLeft = WORK_SECONDS;
+            phaseLength = WORK_SECONDS;
+            paused = false;
+            pauseBtn.textContent = "Pause";
+
+            var exercise = exercises[index];
+            // offline exercises have no GIF, so hide the picture box for them
+            if (exercise.gif_url === "") {
+                mediaBox.hidden = true;
+            } else {
+                mediaBox.hidden = false;
+                gif.src = exercise.gif_url;
+                gif.alt = exercise.name;
+            }
+            nameEl.textContent = exercise.name;
+            phaseLabel.textContent = "Work";
+            player.classList.remove("rest-mode");
+            progressText.textContent = "Exercise " + (index + 1) + " of " + exercises.length;
+
+            // rebuild the numbered instruction list for this exercise
+            instructionsEl.innerHTML = "";
+            for (var i = 0; i < exercise.instructions.length; i = i + 1) {
+                var item = document.createElement("li");
+                item.textContent = exercise.instructions[i];
+                instructionsEl.appendChild(item);
+            }
+            instructionsEl.hidden = false;
+
+            updateSegments();
+            updateTimerDisplay();
+            startTimer();
+        }
+
+        function showRest() {
+            phase = "rest";
+            secondsLeft = REST_SECONDS;
+            phaseLength = REST_SECONDS;
+
+            // preview the upcoming exercise while the user rests
+            var next = exercises[currentIndex + 1];
+            if (next.gif_url === "") {
+                mediaBox.hidden = true;
+            } else {
+                mediaBox.hidden = false;
+                gif.src = next.gif_url;
+                gif.alt = "Up next: " + next.name;
+            }
+            nameEl.textContent = "Rest";
+            phaseLabel.textContent = "Up next: " + next.name;
+            player.classList.add("rest-mode");
+            progressText.textContent = "Rest";
+            instructionsEl.hidden = true;
+
+            updateSegments();
+            updateTimerDisplay();
+        }
+
+        function showComplete() {
+            stopTimer();
+            stage.hidden = true;
+            completeScreen.hidden = false;
+            progressText.textContent = "All done";
+            for (var i = 0; i < segments.length; i = i + 1) {
+                segments[i].classList.remove("current");
+                segments[i].classList.add("done");
+            }
+        }
+
+        function nextPhase() {
+            if (phase === "work") {
+                if (currentIndex === exercises.length - 1) {
+                    showComplete();
+                } else {
+                    showRest();
+                }
+            } else {
+                showExercise(currentIndex + 1);
+            }
+        }
+
+        function tick() {
+            secondsLeft = secondsLeft - 1;
+            if (secondsLeft <= 0) {
+                secondsLeft = 0;
+                updateTimerDisplay();
+                nextPhase();
+            } else {
+                updateTimerDisplay();
+            }
+        }
+
+        function pauseOrResume() {
+            if (paused) {
+                paused = false;
+                pauseBtn.textContent = "Pause";
+                startTimer();
+            } else {
+                paused = true;
+                pauseBtn.textContent = "Resume";
+                stopTimer();
+            }
+        }
+
+        function skipAhead() {
+            // jump straight to the next exercise, or finish if this was the last
+            if (phase === "work" && currentIndex === exercises.length - 1) {
+                showComplete();
+            } else {
+                showExercise(currentIndex + 1);
+            }
+        }
+
+        function openPlayer() {
+            player.hidden = false;
+            stage.hidden = false;
+            completeScreen.hidden = true;
+            // stops the page behind the player from scrolling
+            document.body.classList.add("player-open");
+            showExercise(0);
+            document.getElementById("exit-btn").focus();
+        }
+
+        function closePlayer() {
+            stopTimer();
+            player.hidden = true;
+            document.body.classList.remove("player-open");
+        }
+
+        document.getElementById("start-workout").addEventListener("click", openPlayer);
+        document.getElementById("exit-btn").addEventListener("click", closePlayer);
+        document.getElementById("overview-btn").addEventListener("click", closePlayer);
+        pauseBtn.addEventListener("click", pauseOrResume);
+        document.getElementById("skip-btn").addEventListener("click", skipAhead);
+
+        // the Escape key also exits the player
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && !player.hidden) {
+                closePlayer();
+            }
+        });
+    })();
+    </script>
+    {% endif %}
+
+    {% set active_tab = 'today' %}
+    {% include "_nav.html" %}
 </body>
 </html>

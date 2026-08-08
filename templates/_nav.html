@@ -1,0 +1,59 @@
+{# Fixed bottom navigation shared by every screen once a user is known.
+   Every link carries user_name through url_for, exactly like the old
+   ghost-button links did, so each page still loads that user's own data.
+   The page including this partial sets active_tab to highlight its tab.
+   "Profile" opens the reminders screen because that is where the user's
+   personal settings live (there is no separate GET profile route). #}
+<nav class="bottom-nav" aria-label="Primary">
+
+    {% if active_tab == 'today' %}
+    <span class="nav-item active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M13 2 4.8 13.4h5L11 22l8.2-11.4h-5z"
+                  stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        <span class="nav-label">Today</span>
+    </span>
+    {% else %}
+    <a class="nav-item" href="{{ url_for('today_view', user=user_name) }}">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M13 2 4.8 13.4h5L11 22l8.2-11.4h-5z"
+                  stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        <span class="nav-label">Today</span>
+    </a>
+    {% endif %}
+
+    <a class="nav-item{% if active_tab == 'plan' %} active{% endif %}"
+       {% if active_tab == 'plan' %}aria-current="page"{% endif %}
+       href="{{ url_for('plan', user=user_name) }}">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3.5" y="5" width="17" height="15.5" rx="3"
+                  stroke="currentColor" stroke-width="1.8"/>
+            <path d="M3.5 9.5h17M8 2.8v4M16 2.8v4"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="nav-label">Plan</span>
+    </a>
+
+    <a class="nav-item{% if active_tab == 'history' %} active{% endif %}"
+       {% if active_tab == 'history' %}aria-current="page"{% endif %}
+       href="{{ url_for('history', user=user_name) }}">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 20v-8M12 20V5M19 20v-5"
+                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <span class="nav-label">History</span>
+    </a>
+
+    <a class="nav-item{% if active_tab == 'profile' %} active{% endif %}"
+       {% if active_tab == 'profile' %}aria-current="page"{% endif %}
+       href="{{ url_for('reminders', user=user_name) }}">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="8.2" r="3.6" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M5 20c1.3-3.4 3.8-5 7-5s5.7 1.6 7 5"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="nav-label">Profile</span>
+    </a>
+</nav>

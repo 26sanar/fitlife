@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,50 +10,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body{% if user_name %} class="has-nav"{% endif %}>
     <div class="container">
-        <div class="brand">
+        <a class="brand rise" href="/">
             <span class="mark"></span>
             <span class="brand-name">FitLife</span>
-        </div>
+        </a>
 
-        <div class="screen-label">007 — History</div>
-        <h1>Workout History</h1>
+        <div class="screen-label rise rise-1">007 &mdash; History</div>
+        <h1 class="rise rise-1">History</h1>
 
         {% if not user_name %}
 
-        <p class="lead">Enter your name to see your own workouts and streak.</p>
+        <p class="lead rise rise-2">Enter your name to see your own workouts and streak.</p>
 
-        <form action="/history" method="GET">
+        <form class="rise rise-3" action="/history" method="GET">
             <label for="history-name">Your name</label>
             <input type="text" name="user" id="history-name"
                    placeholder="Your name" maxlength="40" required>
             <button type="submit">View My History</button>
         </form>
 
+        <a class="ghost-button" href="/">Back to Home</a>
+
         {% else %}
 
-        <p class="lead">Here is everything <strong>{{ user_name }}</strong> has completed.</p>
+        <p class="lead rise rise-2">Everything <strong>{{ user_name }}</strong> has completed so far.</p>
 
         <div class="history-split">
             <div>
-                <div class="streak-big">{{ streak }}</div>
-                <div class="streak-label">day streak</div>
+                <div class="streak-hero rise rise-2">
+                    <div class="streak-big">{{ streak }}</div>
+                    <div class="streak-label">day streak</div>
+                </div>
 
-                <h3>Last 8 Weeks</h3>
-                <div class="chart">
-                    {% for week in weeks %}
-                    <div class="bar-slot">
-                        <div class="bar" style="--bar-height: {{ week.height }}%; animation-delay: {{ loop.index0 * 0.07 }}s"></div>
+                <div class="panel rise rise-3">
+                    <h3>Last 8 Weeks</h3>
+                    <div class="chart">
+                        {% for week in weeks %}
+                        <div class="bar-slot">
+                            <div class="bar" style="--bar-height: {{ week.height }}%; animation-delay: {{ loop.index0 * 0.07 }}s"></div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-                <div class="chart-axis">
-                    <span>8 weeks ago</span>
-                    <span>this week</span>
+                    <div class="chart-axis">
+                        <span>8 weeks ago</span>
+                        <span>this week</span>
+                    </div>
                 </div>
 
-                <div class="stat-row">
+                <div class="stat-row rise rise-4">
                     <div class="stat">
                         <span class="stat-value">{{ total_minutes }}</span>
                         <span class="stat-label">Total minutes</span>
@@ -66,10 +72,10 @@
             </div>
 
             <div>
-                <h3>Recent Sessions</h3>
+                <h3 class="rise rise-4">Recent Sessions</h3>
 
                 {% if sessions %}
-                    <ul class="session-list">
+                    <ul class="session-list rise rise-4">
                         {% for session in sessions %}
                         <li class="session">
                             <div>
@@ -81,7 +87,7 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <div class="empty-note">
+                    <div class="empty-note rise rise-4">
                         <p>No workouts have been completed yet.</p>
                     </div>
                 {% endif %}
@@ -89,8 +95,11 @@
         </div>
 
         {% endif %}
-
-        <a class="ghost-button" href="/">Back to Home</a>
     </div>
+
+    {% if user_name %}
+    {% set active_tab = 'history' %}
+    {% include "_nav.html" %}
+    {% endif %}
 </body>
 </html>

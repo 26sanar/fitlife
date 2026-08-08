@@ -21,6 +21,8 @@
 
             <svg class="landing-wave" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true">
                 <path d="M0,96 C90,30 180,142 300,84 C420,26 510,132 600,58"></path>
+                <!-- second copy of the line: a short bright dash sweeps along it like a heartbeat -->
+                <path class="wave-pulse" d="M0,96 C90,30 180,142 300,84 C420,26 510,132 600,58"></path>
             </svg>
 
             <div class="grain" aria-hidden="true"></div>
@@ -41,12 +43,12 @@
 
                 <h1 class="headline">
                     <span class="hl hl-mobile">
-                        <span>Ten</span> <span>minutes</span> <span>a</span> <span>day,</span>
-                        <span>every</span> <span>day.</span>
+                        <span class="line">Ten minutes a day,</span>
+                        <span class="line">every day.</span>
                     </span>
                     <span class="hl hl-desktop">
-                        <span>Ten</span> <span>minutes</span> <span>a</span> <span>day.</span>
-                        <span>That's</span> <span>it.</span>
+                        <span class="line">Ten minutes a day.</span>
+                        <span class="line">That's it.</span>
                     </span>
                 </h1>
 
@@ -56,23 +58,43 @@
                 </p>
 
                 <div class="cta-row">
-                    <button class="cta" id="get-started" type="button">Get started</button>
+                    <button class="cta cta-glow" id="get-started" type="button">Get started</button>
                     <span class="microcopy">No account required.</span>
                 </div>
 
-                <form action="/profile" method="POST">
-                    <label for="returning-name">Returning? Enter your name</label>
-                    <input type="text" name="user_name" id="returning-name"
-                           placeholder="Your name" maxlength="40" required>
-                    <button type="submit" class="ghost-button">Load my profile</button>
-                    {% if message %}
-                    <p class="microcopy">{{ message }}</p>
-                    {% endif %}
-                    {% if profile %}
-                    <p class="microcopy">Welcome back, {{ profile.user_name }}! Press Get started to see your saved answers.</p>
-                    {% endif %}
-                </form>
+                {# The returning form stays collapsed behind this link so it does
+                   not compete with the main CTA. It opens automatically when the
+                   server has a message or a loaded profile to show. #}
+                <button type="button" class="returning-toggle" id="returning-toggle"
+                        aria-controls="returning-form"
+                        aria-expanded="{{ 'true' if message or profile else 'false' }}">
+                    Already have a profile?
+                </button>
+
+                <div class="returning-wrap{% if message or profile %} open{% endif %}" id="returning-wrap">
+                    <div class="returning-inner">
+                        <form action="/profile" method="POST" id="returning-form">
+                            <label for="returning-name">Returning? Enter your name</label>
+                            <input type="text" name="user_name" id="returning-name"
+                                   placeholder="Your name" maxlength="40" required>
+                            <button type="submit" class="ghost-button">Load my profile</button>
+                            {% if message %}
+                            <p class="microcopy">{{ message }}</p>
+                            {% endif %}
+                            {% if profile %}
+                            <p class="microcopy">Welcome back, {{ profile.user_name }}! Press Get started to see your saved answers.</p>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <div class="scroll-cue" id="scroll-cue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
         </div>
     </section>
 
@@ -347,6 +369,65 @@
                 updateChrome();
             });
         });
+
+        // ----- collapsing "Already have a profile?" form -----
+        var returningToggle = document.getElementById("returning-toggle");
+        var returningWrap = document.getElementById("returning-wrap");
+
+        returningToggle.addEventListener("click", function () {
+            var isOpen = returningWrap.classList.toggle("open");
+            returningToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (isOpen) {
+                // wait for the expand animation to finish before focusing the name box
+                setTimeout(function () {
+                    document.getElementById("returning-name").focus({ preventScroll: true });
+                }, reduced ? 0 : 350);
+            }
+        });
+
+        // ----- gentle mouse parallax on the hero photo -----
+        // The photo drifts a few pixels opposite to the mouse. CSS reads the
+        // two custom properties (--parallax-x / --parallax-y) inside its
+        // transform, so this works alongside the entrance scale animation.
+        var photo = document.querySelector(".landing-photo");
+        var targetX = 0;   // where the photo should drift to
+        var targetY = 0;
+        var currentX = 0;  // where the photo is right now
+        var currentY = 0;
+
+        function glide() {
+            // move a small step towards the target each frame — this easing
+            // makes the motion feel smooth instead of twitchy
+            currentX = currentX + (targetX - currentX) * 0.06;
+            currentY = currentY + (targetY - currentY) * 0.06;
+            photo.style.setProperty("--parallax-x", currentX.toFixed(2) + "px");
+            photo.style.setProperty("--parallax-y", currentY.toFixed(2) + "px");
+            requestAnimationFrame(glide);
+        }
+
+        if (!reduced) {
+            document.addEventListener("mousemove", function (event) {
+                // how far the mouse is from the centre of the screen, -0.5 to 0.5
+                var ratioX = event.clientX / window.innerWidth - 0.5;
+                var ratioY = event.clientY / window.innerHeight - 0.5;
+                // drift the opposite way, never more than 8px
+                targetX = -ratioX * 16;
+                targetY = -ratioY * 16;
+            });
+            glide();
+        }
+
+        // ----- scroll cue: only shows when there is content below the fold -----
+        var scrollCue = document.getElementById("scroll-cue");
+
+        function updateScrollCue() {
+            var hasMore = document.body.scrollHeight > window.innerHeight + 40;
+            scrollCue.classList.toggle("show", hasMore && window.scrollY < 30);
+        }
+
+        updateScrollCue();
+        window.addEventListener("resize", updateScrollCue);
+        window.addEventListener("scroll", updateScrollCue);
     })();
     </script>
 </body>

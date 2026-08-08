@@ -31,6 +31,177 @@ needs_apparatus = [
     "bar ", "bench", "parallel", "rings", "hang", "suspended", "assisted"
 ]
 
+# Built-in exercises used when the ExerciseDB API cannot be reached,
+# so the app still works offline. Each entry uses the same format as
+# the entries built from the API: name, body_parts, instructions, gif_url.
+offline_exercises = [
+    {
+        "name": "squat",
+        "body_parts": ["upper legs"],
+        "gif_url": "",
+        "instructions": [
+            "Stand with your feet shoulder-width apart and toes pointing slightly out.",
+            "Bend your knees and push your hips back as if sitting into a chair.",
+            "Lower until your thighs are about parallel with the floor, keeping your chest up.",
+            "Push through your heels to stand back up, and repeat."
+        ]
+    },
+    {
+        "name": "reverse lunge",
+        "body_parts": ["upper legs"],
+        "gif_url": "",
+        "instructions": [
+            "Stand tall with your feet hip-width apart.",
+            "Step one foot back and bend both knees until your back knee hovers just above the floor.",
+            "Keep your chest upright and your front knee over your ankle.",
+            "Push back to standing and repeat on the other leg."
+        ]
+    },
+    {
+        "name": "glute bridge",
+        "body_parts": ["upper legs"],
+        "gif_url": "",
+        "instructions": [
+            "Lie on your back with your knees bent and feet flat on the floor.",
+            "Squeeze your glutes and lift your hips until your body is straight from knees to shoulders.",
+            "Hold for a second at the top.",
+            "Lower slowly and repeat."
+        ]
+    },
+    {
+        "name": "calf raise",
+        "body_parts": ["lower legs"],
+        "gif_url": "",
+        "instructions": [
+            "Stand tall with your feet hip-width apart.",
+            "Push through the balls of your feet to lift your heels as high as you can.",
+            "Pause briefly at the top.",
+            "Lower your heels slowly back to the floor and repeat."
+        ]
+    },
+    {
+        "name": "push-up",
+        "body_parts": ["chest"],
+        "gif_url": "",
+        "instructions": [
+            "Start in a high plank with your hands slightly wider than your shoulders.",
+            "Keep your body in a straight line from head to heels.",
+            "Bend your elbows to lower your chest towards the floor.",
+            "Push back up to the starting position and repeat."
+        ]
+    },
+    {
+        "name": "wide push-up",
+        "body_parts": ["chest"],
+        "gif_url": "",
+        "instructions": [
+            "Start in a push-up position with your hands about double shoulder-width apart.",
+            "Lower your chest towards the floor, keeping your elbows over your wrists.",
+            "Press back up until your arms are straight.",
+            "Keep your hips level the whole time."
+        ]
+    },
+    {
+        "name": "crunch",
+        "body_parts": ["waist"],
+        "gif_url": "",
+        "instructions": [
+            "Lie on your back with your knees bent and hands lightly behind your head.",
+            "Tighten your stomach and curl your shoulders off the floor.",
+            "Avoid pulling on your neck.",
+            "Lower back down with control and repeat."
+        ]
+    },
+    {
+        "name": "plank hold",
+        "body_parts": ["waist"],
+        "gif_url": "",
+        "instructions": [
+            "Rest on your forearms with your elbows under your shoulders and legs straight behind you.",
+            "Squeeze your stomach and glutes so your body forms a straight line.",
+            "Keep your neck relaxed and breathe steadily.",
+            "Hold this position for the full time."
+        ]
+    },
+    {
+        "name": "bicycle crunch",
+        "body_parts": ["waist"],
+        "gif_url": "",
+        "instructions": [
+            "Lie on your back with your hands behind your head and legs lifted.",
+            "Bring one knee in while twisting your opposite elbow towards it.",
+            "Switch sides in a smooth pedalling motion.",
+            "Keep your lower back pressed into the floor."
+        ]
+    },
+    {
+        "name": "mountain climber",
+        "body_parts": ["waist", "cardio"],
+        "gif_url": "",
+        "instructions": [
+            "Start in a high plank with your hands under your shoulders.",
+            "Drive one knee towards your chest, then quickly switch legs.",
+            "Keep your hips low and your back flat.",
+            "Continue switching at a steady running pace."
+        ]
+    },
+    {
+        "name": "superman hold",
+        "body_parts": ["back"],
+        "gif_url": "",
+        "instructions": [
+            "Lie face down with your arms stretched out in front of you.",
+            "Lift your arms, chest and legs a few centimetres off the floor at the same time.",
+            "Squeeze your back and glutes, and hold for a moment.",
+            "Lower down with control and repeat."
+        ]
+    },
+    {
+        "name": "bird dog",
+        "body_parts": ["back", "waist"],
+        "gif_url": "",
+        "instructions": [
+            "Start on your hands and knees with a flat back.",
+            "Reach one arm forward while extending the opposite leg back.",
+            "Pause, keeping your hips level and stomach tight.",
+            "Return and repeat with the other arm and leg."
+        ]
+    },
+    {
+        "name": "jumping jack",
+        "body_parts": ["cardio"],
+        "gif_url": "",
+        "instructions": [
+            "Stand upright with your feet together and arms by your sides.",
+            "Jump your feet out wide while raising your arms overhead.",
+            "Jump back to the starting position.",
+            "Repeat at a steady rhythm."
+        ]
+    },
+    {
+        "name": "high knees",
+        "body_parts": ["cardio", "upper legs"],
+        "gif_url": "",
+        "instructions": [
+            "Stand tall with your feet hip-width apart.",
+            "Run on the spot, driving your knees up towards hip height.",
+            "Pump your arms and stay light on your feet.",
+            "Keep a quick, steady pace."
+        ]
+    },
+    {
+        "name": "burpee",
+        "body_parts": ["cardio", "chest", "upper legs"],
+        "gif_url": "",
+        "instructions": [
+            "From standing, crouch down and place your hands on the floor.",
+            "Jump your feet back into a high plank.",
+            "Jump your feet back in towards your hands.",
+            "Stand up and jump, then repeat."
+        ]
+    }
+]
+
 exercise_library = []
 
 
@@ -49,6 +220,13 @@ def is_equipment_free(exercise):
     return True
 
 
+def use_offline_exercises():
+    """Fill the library with the built-in list when the API is unreachable."""
+    for exercise in offline_exercises:
+        exercise_library.append(exercise)
+    print("Using", len(exercise_library), "built-in offline exercises")
+
+
 def load_exercises():
     """Fetch bodyweight exercises from the ExerciseDB API when the app starts."""
     cursor_value = None
@@ -59,10 +237,17 @@ def load_exercises():
             settings["cursor"] = cursor_value
 
         try:
-            response = requests.get(API_URL, params=settings, timeout=10)
+            # The browser-style User-Agent stops the API's bot filter from
+            # rejecting the request with a 403 Forbidden error.
+            response = requests.get(API_URL, params=settings, timeout=10,
+                                    headers={"User-Agent": "Mozilla/5.0"})
+            if response.status_code != 200:
+                raise Exception("API returned status " + str(response.status_code))
             data = response.json()
         except Exception as error:
-            print("API unavailable, using offline workouts. Reason:", error)
+            print("API unavailable. Reason:", error)
+            if exercise_library == []:
+                use_offline_exercises()
             return
 
         for exercise in data["data"]:
@@ -77,6 +262,10 @@ def load_exercises():
         cursor_value = data["meta"]["nextCursor"]
         if cursor_value is None:
             break
+
+    if exercise_library == []:
+        use_offline_exercises()
+        return
 
     print("Loaded", len(exercise_library), "equipment-free exercises from the API")
 
@@ -404,6 +593,40 @@ def today():
     )
 
 
+@app.route("/today", methods=["GET"])
+def today_view():
+    """Show today's workout for a returning user, using their saved profile,
+    so the navigation bar can link here without redoing onboarding."""
+    user_name = request.args.get("user", "").strip()
+
+    if user_name == "":
+        return redirect(url_for("index"))
+
+    profile = load_profile(user_name)
+    if profile is None:
+        return redirect(url_for("index"))
+
+    # Top up the weekly plan so it always covers the next 7 days.
+    # Existing days are left alone because of ON CONFLICT DO NOTHING.
+    generate_weekly_plan(user_name, profile["level"], profile["available_minutes"])
+
+    workout_name = choose_workout(profile["level"], profile["available_minutes"])
+    workout = workouts[workout_name]
+    exercises = get_exercises_for(workout["focus"], 4)
+
+    return render_template(
+        "today.html",
+        user_name=user_name,
+        age=profile["age"],
+        goal=profile["goal"],
+        workout_name=workout_name,
+        workout=workout,
+        exercises=exercises,
+        streak=calculate_streak(user_name),
+        today_date=date.today().strftime("%A %d %B")
+    )
+
+
 @app.route("/complete", methods=["POST"])
 def complete():
     user_name = request.form["user_name"]
@@ -490,7 +713,8 @@ def reminders():
     return render_template(
         "reminders.html",
         user_name=user_name,
-        reminder=load_reminder(user_name)
+        reminder=load_reminder(user_name),
+        profile=load_profile(user_name)
     )
 
 
