@@ -1,48 +1,338 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>FitLife - Home Workout Web App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FitLife - Ten minutes a day, no equipment</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
-    <div class="container">
-        <div class="screen-label">001 — Welcome</div>
-        <h1>Ten minutes a day. That's it.</h1>
+<body class="page-landing">
 
-        <p>No equipment, no gym. Workouts that fit around your life.</p>
+    <!-- ============ 001 — LANDING ============ -->
+    <section class="landing" id="landing">
+        <div class="landing-media">
+            <img class="landing-photo" src="{{ url_for('static', filename='hero.jpg') }}"
+                 alt="Athlete training at home in low light">
+            <div class="landing-scrim"></div>
 
-        <form action="/today" method="POST">
-            <label>Your Name</label>
-            <input type="text" name="user_name" required>
+            <svg class="landing-wave" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0,96 C90,30 180,142 300,84 C420,26 510,132 600,58"></path>
+            </svg>
 
-            <label>Age</label>
-            <input type="number" name="age" min="13" max="100" required>
+            <div class="grain" aria-hidden="true"></div>
+        </div>
 
-            <label>Fitness Level</label>
-            <select name="level" required>
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-            </select>
+        <div class="landing-panel">
+            <header class="landing-top">
+                <div class="brand">
+                    <span class="mark"></span>
+                    <span class="brand-name">FitLife</span>
+                </div>
+                <a class="quiet-link" href="/history">History</a>
+            </header>
 
-            <label>Your Goal</label>
-            <select name="goal" required>
-                <option value="General fitness">General fitness</option>
-                <option value="Build strength">Build strength</option>
-                <option value="Stay active">Stay active</option>
-            </select>
+            <div class="landing-copy">
+                <span class="mark mark-hero" aria-hidden="true"></span>
+                <div class="screen-label">001 — Landing</div>
 
-            <label>Minutes Available</label>
-            <input type="number" name="available_minutes" min="5" max="60" required>
+                <h1 class="headline">
+                    <span class="hl hl-mobile">
+                        <span>Ten</span> <span>minutes</span> <span>a</span> <span>day,</span>
+                        <span>every</span> <span>day.</span>
+                    </span>
+                    <span class="hl hl-desktop">
+                        <span>Ten</span> <span>minutes</span> <span>a</span> <span>day.</span>
+                        <span>That's</span> <span>it.</span>
+                    </span>
+                </h1>
 
-            <button type="submit">Get My Workout</button>
+                <p class="lead landing-lead">
+                    <span class="hl hl-mobile">Guided home workouts that fit around your life. No equipment needed.</span>
+                    <span class="hl hl-desktop">No equipment, no gym. Workouts that fit around your life.</span>
+                </p>
+
+                <div class="cta-row">
+                    <button class="cta" id="get-started" type="button">Get started</button>
+                    <span class="microcopy">No account required.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ 002 — ONBOARDING ============ -->
+    <section class="onboard" id="onboard" hidden>
+        <form action="/today" method="POST" id="onboard-form" novalidate>
+            <input type="hidden" name="level" id="f-level" value="">
+            <input type="hidden" name="goal" id="f-goal" value="">
+            <input type="hidden" name="available_minutes" id="f-minutes" value="">
+
+            <header class="onboard-top">
+                <button type="button" class="back-btn" id="back-btn" aria-label="Go back">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M14.5 5.5L8 12l6.5 6.5" stroke="currentColor" stroke-width="2.2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <div class="dots" aria-hidden="true">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    <span class="dot"></span><span class="dot"></span>
+                </div>
+                <span class="onboard-spacer"></span>
+            </header>
+
+            <div class="steps">
+
+                <fieldset class="step" data-step="0">
+                    <div class="screen-label">002 — Onboarding</div>
+                    <h2 class="question">First up, what should we call you?</h2>
+                    <div class="field-wrap">
+                        <input class="onboard-input" type="text" name="user_name" id="in-name"
+                               placeholder="Your name" autocomplete="given-name" maxlength="40">
+                    </div>
+                </fieldset>
+
+                <fieldset class="step" data-step="1">
+                    <div class="screen-label">002 — Onboarding</div>
+                    <h2 class="question">How old are you?</h2>
+                    <div class="field-wrap">
+                        <input class="onboard-input" type="number" name="age" id="in-age"
+                               placeholder="Your age" inputmode="numeric" min="13" max="100">
+                    </div>
+                    <p class="step-hint">FitLife is designed for ages 13 to 100.</p>
+                </fieldset>
+
+                <fieldset class="step" data-step="2">
+                    <div class="screen-label">002 — Onboarding</div>
+                    <h2 class="question">How would you describe your fitness level?</h2>
+                    <div class="options" role="radiogroup" aria-label="Fitness level" data-target="f-level">
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Beginner">
+                            <span class="option-text">
+                                <span class="option-title">Beginner</span>
+                                <span class="option-sub">New to regular exercise</span>
+                            </span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Intermediate">
+                            <span class="option-text">
+                                <span class="option-title">Intermediate</span>
+                                <span class="option-sub">Active a few times a week</span>
+                            </span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Advanced">
+                            <span class="option-text">
+                                <span class="option-title">Advanced</span>
+                                <span class="option-sub">Training is part of my routine</span>
+                            </span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                </fieldset>
+
+                <fieldset class="step" data-step="3">
+                    <div class="screen-label">002 — Onboarding</div>
+                    <h2 class="question">What are you training for?</h2>
+                    <div class="options" role="radiogroup" aria-label="Your goal" data-target="f-goal">
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="General fitness">
+                            <span class="option-text">
+                                <span class="option-title">General fitness</span>
+                                <span class="option-sub">Feel healthier day to day</span>
+                            </span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Build strength">
+                            <span class="option-text">
+                                <span class="option-title">Build strength</span>
+                                <span class="option-sub">Get stronger with bodyweight work</span>
+                            </span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="Stay active">
+                            <span class="option-text">
+                                <span class="option-title">Stay active</span>
+                                <span class="option-sub">Keep moving, keep the streak</span>
+                            </span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                </fieldset>
+
+                <fieldset class="step" data-step="4">
+                    <div class="screen-label">002 — Onboarding</div>
+                    <h2 class="question">How much time do you have on a typical day?</h2>
+                    <div class="options two-col" role="radiogroup" aria-label="Minutes available" data-target="f-minutes">
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="10">
+                            <span class="option-text"><span class="option-title">About 10 minutes</span></span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="15">
+                            <span class="option-text"><span class="option-title">About 15 minutes</span></span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="20">
+                            <span class="option-text"><span class="option-title">About 20 minutes</span></span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                        <button type="button" class="option" role="radio" aria-checked="false" data-value="20" data-label="varies">
+                            <span class="option-text"><span class="option-title">It varies</span></span>
+                            <span class="option-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                </fieldset>
+
+            </div>
+
+            <div class="onboard-actions">
+                <button type="button" class="cta" id="continue-btn" disabled>Continue</button>
+            </div>
         </form>
+    </section>
 
-        <a href="/history">View Workout History</a>
-    </div>
+    <script>
+    (function () {
+        var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        var landing = document.getElementById("landing");
+        var onboard = document.getElementById("onboard");
+        var form = document.getElementById("onboard-form");
+        var steps = Array.prototype.slice.call(document.querySelectorAll(".step"));
+        var dots = Array.prototype.slice.call(document.querySelectorAll(".dot"));
+        var backBtn = document.getElementById("back-btn");
+        var continueBtn = document.getElementById("continue-btn");
+
+        var nameIn = document.getElementById("in-name");
+        var ageIn = document.getElementById("in-age");
+        var levelIn = document.getElementById("f-level");
+        var goalIn = document.getElementById("f-goal");
+        var minutesIn = document.getElementById("f-minutes");
+
+        var current = 0;
+        var last = steps.length - 1;
+
+        function validStep(i) {
+            if (i === 0) return nameIn.value.trim().length > 0;
+            if (i === 1) {
+                var a = parseInt(ageIn.value, 10);
+                return !isNaN(a) && a >= 13 && a <= 100;
+            }
+            if (i === 2) return levelIn.value !== "";
+            if (i === 3) return goalIn.value !== "";
+            if (i === 4) return minutesIn.value !== "";
+            return false;
+        }
+
+        function updateChrome() {
+            continueBtn.disabled = !validStep(current);
+            continueBtn.textContent = current === last ? "Get my workout" : "Continue";
+            dots.forEach(function (dot, i) {
+                dot.classList.toggle("active", i === current);
+                dot.classList.toggle("done", i < current);
+            });
+        }
+
+        function showStep(i) {
+            var from = steps[current];
+            var to = steps[i];
+            var delay = reduced ? 0 : 200;
+
+            if (from !== to && from.classList.contains("in")) {
+                from.classList.remove("in");
+                from.classList.add("out");
+            }
+
+            setTimeout(function () {
+                steps.forEach(function (s) { s.classList.remove("in", "out"); });
+                void to.offsetWidth;
+                to.classList.add("in");
+                current = i;
+                updateChrome();
+
+                var input = to.querySelector(".onboard-input");
+                if (input) input.focus({ preventScroll: true });
+            }, from === to ? 0 : delay);
+        }
+
+        function advance() {
+            if (!validStep(current)) return;
+            if (current === last) {
+                form.requestSubmit ? form.requestSubmit() : form.submit();
+            } else {
+                showStep(current + 1);
+            }
+        }
+
+        function enterOnboard() {
+            landing.classList.add("leave");
+            setTimeout(function () {
+                landing.hidden = true;
+                onboard.hidden = false;
+                showStep(0);
+            }, reduced ? 0 : 430);
+        }
+
+        function exitOnboard() {
+            onboard.hidden = true;
+            landing.hidden = false;
+            landing.classList.remove("leave");
+        }
+
+        document.getElementById("get-started").addEventListener("click", enterOnboard);
+
+        backBtn.addEventListener("click", function () {
+            if (current === 0) exitOnboard();
+            else showStep(current - 1);
+        });
+
+        continueBtn.addEventListener("click", advance);
+
+        form.addEventListener("keydown", function (e) {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            advance();
+        });
+
+        [nameIn, ageIn].forEach(function (input) {
+            input.addEventListener("input", updateChrome);
+        });
+
+        Array.prototype.forEach.call(document.querySelectorAll(".options"), function (group) {
+            var target = document.getElementById(group.getAttribute("data-target"));
+            group.addEventListener("click", function (e) {
+                var btn = e.target.closest(".option");
+                if (!btn) return;
+                Array.prototype.forEach.call(group.querySelectorAll(".option"), function (o) {
+                    o.setAttribute("aria-checked", "false");
+                });
+                btn.setAttribute("aria-checked", "true");
+                target.value = btn.getAttribute("data-value");
+                updateChrome();
+            });
+        });
+    })();
+    </script>
 </body>
 </html>

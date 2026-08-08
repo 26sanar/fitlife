@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Today's Workout - FitLife</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -9,55 +11,86 @@
 </head>
 
 <body>
+    {# Work out how far around the ring the streak should reach, using a 30 day goal #}
+    {% set goal_days = 30 %}
+    {% set shown_days = streak if streak < goal_days else goal_days %}
+    {% set ring_offset = 540.354 - (540.354 * shown_days / goal_days) %}
+
     <div class="container">
+        <div class="brand">
+            <span class="mark"></span>
+            <span class="brand-name">FitLife</span>
+        </div>
+
         <div class="screen-label">003 — Today</div>
         <h1>Today's Workout</h1>
+        <p class="lead">Hi <strong>{{ user_name }}</strong>, here is your workout for {{ today_date }}.</p>
 
-        <p>Hi <strong>{{ user_name }}</strong>, here is your workout for today.</p>
+        <div class="today-split">
+            <div class="ring-wrap">
+                <svg class="ring" viewBox="0 0 200 200" role="img" aria-label="{{ streak }} day streak">
+                    <defs>
+                        <linearGradient id="ringGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#2ee6a8"></stop>
+                            <stop offset="100%" stop-color="#c6ff2e"></stop>
+                        </linearGradient>
+                    </defs>
+                    <circle class="ring-track" cx="100" cy="100" r="86"></circle>
+                    <circle class="ring-progress" cx="100" cy="100" r="86" style="--ring-offset: {{ ring_offset }}"></circle>
+                </svg>
 
-        <div class="streak">
-            <span class="streak-number">{{ streak }}</span>
-            <span class="streak-label">day streak</span>
+                <div class="ring-center">
+                    <span class="streak-number">{{ streak }}</span>
+                    <span class="streak-label">day streak</span>
+                </div>
+            </div>
+
+            <div class="workout-card">
+                <h2>{{ workout_name }}</h2>
+                <p class="card-meta">{{ workout.minutes }} min &middot; {{ workout.level }}</p>
+
+                <div class="chips">
+                    {% for area in workout.focus.split(', ') %}
+                    <span class="chip">{{ area }}</span>
+                    {% endfor %}
+                    <span class="chip chip-goal">{{ goal }}</span>
+                </div>
+
+                <form action="/complete" method="POST">
+                    <input type="hidden" name="user_name" value="{{ user_name }}">
+                    <input type="hidden" name="workout_name" value="{{ workout_name }}">
+                    <input type="hidden" name="minutes" value="{{ workout.minutes }}">
+                    <button type="submit">Mark as Complete</button>
+                </form>
+            </div>
         </div>
 
-        <div class="workout-card">
-            <h2>{{ workout_name }}</h2>
-            <ul>
-                <li><span>Duration</span> <span>{{ workout.minutes }} min</span></li>
-                <li><span>Level</span> <span>{{ workout.level }}</span></li>
-                <li><span>Focus</span> <span>{{ workout.focus }}</span></li>
-                <li><span>Goal</span> <span>{{ goal }}</span></li>
-            </ul>
+        <h3>Your Exercises</h3>
 
-            <h3>Your Exercises</h3>
-
-            {% if exercises %}
-                <div class="exercise-grid">
-                {% for exercise in exercises %}
-                <div class="exercise">
+        {% if exercises %}
+            <div class="exercise-grid">
+            {% for exercise in exercises %}
+            <div class="exercise">
+                <div class="exercise-media">
                     <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}">
-                    <h4>{{ exercise.name }}</h4>
-                    <ol>
-                        {% for step in exercise.instructions %}
-                        <li>{{ step }}</li>
-                        {% endfor %}
-                    </ol>
+                    <span class="exercise-count">{{ loop.index }} of {{ exercises|length }}</span>
                 </div>
-                {% endfor %}
-                </div>
-            {% else %}
+                <h4>{{ exercise.name }}</h4>
+                <ol>
+                    {% for step in exercise.instructions %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-note">
                 <p>Exercise details are unavailable right now. Complete your workout using the focus areas above.</p>
-            {% endif %}
-        </div>
+            </div>
+        {% endif %}
 
-        <form action="/complete" method="POST">
-            <input type="hidden" name="user_name" value="{{ user_name }}">
-            <input type="hidden" name="workout_name" value="{{ workout_name }}">
-            <input type="hidden" name="minutes" value="{{ workout.minutes }}">
-            <button type="submit">Mark as Complete</button>
-        </form>
-
-        <a href="/">Get a Different Workout</a>
+        <a class="ghost-button" href="/">Get a Different Workout</a>
 
         <p class="attribution">Exercise data and demonstrations provided by ExerciseDB.</p>
     </div>

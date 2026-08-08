@@ -18,7 +18,6 @@ workouts = {
 
 API_URL = "https://oss.exercisedb.dev/api/v1/exercises"
 
-# Maps the focus areas used in FitLife to the body part names used by the API
 focus_map = {
     "Full body": ["upper legs", "chest", "back", "cardio"],
     "Core":      ["waist"],
@@ -27,7 +26,6 @@ focus_map = {
     "Chest":     ["chest"]
 }
 
-# Exercises tagged as bodyweight that still require a bar, bench or other apparatus
 needs_apparatus = [
     "pull-up", "pull up", "chin-up", "chin up", "dip", "muscle up",
     "bar ", "bench", "parallel", "rings", "hang", "suspended", "assisted"
@@ -38,11 +36,11 @@ exercise_library = []
 
 def is_equipment_free(exercise):
     """Return True only if an exercise needs no equipment at all."""
-    # Must be tagged bodyweight and nothing else
+    
     if exercise["equipments"] != ["body weight"]:
         return False
 
-    # Reject exercises whose name implies a bar, bench or similar
+    
     name = exercise["name"].lower()
     for word in needs_apparatus:
         if word in name:
@@ -162,6 +160,42 @@ def calculate_streak():
     return streak
 
 
+def get_weekly_minutes():
+    """Return the minutes exercised in each of the last 8 weeks, oldest first."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+    cursor.execute("SELECT date_completed, minutes FROM sessions")
+    rows = cursor.fetchall()
+    connection.close()
+
+    weeks = []
+    for number in range(7, -1, -1):
+        weeks.append({
+            "start": date.today() - timedelta(days=number * 7 + 6),
+            "end": date.today() - timedelta(days=number * 7),
+            "minutes": 0
+        })
+
+    for row in rows:
+        day = date.fromisoformat(row[0])
+        for week in weeks:
+            if week["start"] <= day <= week["end"]:
+                week["minutes"] = week["minutes"] + row[1]
+
+    busiest = 0
+    for week in weeks:
+        if week["minutes"] > busiest:
+            busiest = week["minutes"]
+
+    for week in weeks:
+        if busiest > 0:
+            week["height"] = int(week["minutes"] / busiest * 100)
+        else:
+            week["height"] = 0
+
+    return weeks
+
+
 def save_profile(user_name, age, level, goal, available_minutes):
     """Create a new profile, or update it if this name already exists."""
     connection = sqlite3.connect(DATABASE)
@@ -207,7 +241,8 @@ def today():
         workout_name=workout_name,
         workout=workout,
         exercises=exercises,
-        streak=calculate_streak()
+        streak=calculate_streak(),
+        today_date=date.today().strftime("%A %d %B")
     )
 
 
@@ -245,7 +280,8 @@ def history():
         "history.html",
         sessions=sessions,
         streak=calculate_streak(),
-        total_minutes=total_minutes
+        total_minutes=total_minutes,
+        weeks=get_weekly_minutes()
     )
 
 
