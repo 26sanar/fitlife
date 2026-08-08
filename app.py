@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect
 import sqlite3
+import requests
+import random
 from datetime import date, timedelta
 
 app = Flask(__name__)
@@ -13,6 +15,69 @@ workouts = {
     "Leg Burner":       {"level": "Intermediate", "minutes": 20, "focus": "Legs"},
     "Power Circuit":    {"level": "Advanced",     "minutes": 20, "focus": "Full body"}
 }
+
+API_URL = "https://oss.exercisedb.dev/api/v1/exercises"
+
+# Maps the focus areas used in FitLife to the body part names used by the API
+focus_map = {
+    "Full body": ["upper legs", "chest", "back", "cardio"],
+    "Core":      ["waist"],
+    "Legs":      ["upper legs", "lower legs"],
+    "Back":      ["back"],
+    "Chest":     ["chest"]
+}
+
+exercise_library = []
+
+
+def load_exercises():
+    """Fetch bodyweight exercises from the ExerciseDB API when the app starts."""
+    cursor_value = None
+
+    for page in range(6):
+        settings = {"limit": 25}
+        if cursor_value is not None:
+            settings["cursor"] = cursor_value
+
+        try:
+            response = requests.get(API_URL, params=settings, timeout=10)
+            data = response.json()
+        except Exception as error:
+            print("API unavailable, using offline workouts. Reason:", error)
+            return
+
+        for exercise in data["data"]:
+            if "body weight" in exercise["equipments"]:
+                exercise_library.append({
+                    "name": exercise["name"],
+                    "body_parts": exercise["bodyParts"],
+                    "instructions": exercise["instructions"],
+                    "gif_url": exercise["gifUrl"]
+                })
+
+        cursor_value = data["meta"]["nextCursor"]
+        if cursor_value is None:
+            break
+
+    print("Loaded", len(exercise_library), "bodyweight exercises from the API")
+
+
+def get_exercises_for(focus, how_many):
+    """Return a list of exercises matching a workout's focus area."""
+    wanted_parts = []
+    for area in focus.split(", "):
+        for part in focus_map.get(area, []):
+            wanted_parts.append(part)
+
+    matches = []
+    for exercise in exercise_library:
+        for part in exercise["body_parts"]:
+            if part in wanted_parts and exercise not in matches:
+                matches.append(exercise)
+
+    if len(matches) > how_many:
+        matches = random.sample(matches, how_many)
+    return matches
 
 
 def create_database():
@@ -75,6 +140,7 @@ def today():
 
     workout_name = choose_workout(level, available_minutes)
     workout = workouts[workout_name]
+    exercises = get_exercises_for(workout["focus"], 4)
 
     return render_template(
         "today.html",
@@ -82,6 +148,7 @@ def today():
         age=age,
         workout_name=workout_name,
         workout=workout,
+        exercises=exercises,
         streak=calculate_streak()
     )
 
@@ -123,7 +190,8 @@ def history():
         total_minutes=total_minutes
     )
 
+create_database()
+load_exercises()
 
 if __name__ == "__main__":
-    create_database()
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

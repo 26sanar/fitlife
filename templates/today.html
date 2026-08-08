@@ -23,6 +23,26 @@
                 <li>Level: {{ workout.level }}</li>
                 <li>Focus: {{ workout.focus }}</li>
             </ul>
+
+            <h3>Your Exercises</h3>
+
+            {% if exercises %}
+            <div class="exercise-grid">  
+                {% for exercise in exercises %}
+                <div class="exercise">
+                    <img src="{{ exercise.gif_url }}" alt="{{ exercise.name }}">
+                    <h4>{{ exercise.name }}</h4>
+                    <ol>
+                        {% for step in exercise.instructions %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p>Exercise details are unavailable right now. Complete your workout using the focus areas above.</p>
+            {% endif %}
         </div>
 
         <form action="/complete" method="POST">
@@ -33,6 +53,7 @@
         </form>
 
         <a href="/">Get a Different Workout</a>
+        <p class="attribution">Exercise data and demonstrations provided by ExerciseDB.</p>
     </div>
 </body>
 </html>

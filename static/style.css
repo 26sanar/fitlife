@@ -126,3 +126,30 @@ th, td {
     text-align: left;
     color: #ffffff;
 }
+
+h3, h4 {
+    color: #ffffff;
+}
+
+.exercise {
+    background-color: #17171b;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.exercise img {
+    width: 100%;
+    max-width: 320px;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    background-color: #ffffff;
+    image-rendering: auto;
+}
+
+.exercise ol {
+    color: #b0b0b8;
+    line-height: 1.6;
+    padding-left: 20px;
+}
